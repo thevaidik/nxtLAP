@@ -5,6 +5,7 @@ import SwiftUI
 
 struct MainTabView: View {
     @State private var selectedTab = 0
+    @StateObject private var racingDataService = RacingDataService()
 
     var body: some View {
         
@@ -20,6 +21,8 @@ struct MainTabView: View {
                         MyRacesView()
                     case 3:
                         AllRacesView()
+                    case 4:
+                        DebugView()
                     default:
                         EmptyView()
                     }
@@ -35,11 +38,14 @@ struct MainTabView: View {
                 tabItem(icon: "calendar", label: "Upcoming", index: 1)
                 tabItem(icon: "star.fill", label: "My Races", index: 2)
                 tabItem(icon: "flag.fill", label: "All", index: 3)
+                tabItem(icon: "gear", label: "Debug", index: 4)
             }
             .padding(.vertical, 10)
             .background(Color(.systemBackground))
         }
         .accentColor(.racingRed)
+        .preferredColorScheme(.dark)
+        .environmentObject(racingDataService)
     }
 
     private func tabItem(icon: String, label: String, index: Int) -> some View {
