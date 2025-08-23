@@ -9,199 +9,217 @@ import Foundation
 
 class RacingAPIService: ObservableObject {
     private let session = URLSession.shared
+    private let baseURL = "https://www.thesportsdb.com/api/v1/json/3"
     
-    // MARK: - Formula 1 API (Ergast - with fallback)
-    func fetchF1Schedule() async throws -> [Race] {
-        // Try primary API first
+    // MARK: - TheSportsDB API Integration - Real Data Only (2025 Season)
+    func fetchAllRacingData() async throws -> [Race] {
+        var allRaces: [Race] = []
+        var errors: [String] = []
+        
+        // Fetch all racing series with 2025 data (only series with upcoming events)
+        let seriesData: [(name: String, id: String, shortName: String)] = [
+            ("Formula 1", "4370", "F1"),                    // 27 upcoming events
+            ("MotoGP", "4407", "MOTO GP"),                  // 16 upcoming events  
+            ("NASCAR Cup Series", "4393", "NASCAR"),        // 10 upcoming events
+            ("BTCC", "4372", "BTCC"),                       // 9 upcoming events
+            ("V8 Supercars", "4489", "V8SC"),              // 9 upcoming events
+            ("WRC", "4409", "WRC"),                         // 5 upcoming events
+            ("Super GT series", "4412", "SGT"),            // 3 upcoming events
+            ("IMSA SportsCar Championship", "4488", "IMSA"), // 2 upcoming events
+            ("IndyCar Series", "4373", "INDYCAR"),          // 1 upcoming event
+            ("British GT Championship", "4410", "BGT")      // 1 upcoming event
+        ]
+        
+        for series in seriesData {
+            print("🏁 Fetching \(series.name) events...")
+            do {
+                let races = try await fetchSeriesEvents(seriesId: series.id, seriesName: series.shortName, displayName: series.name)
+                allRaces.append(contentsOf: races)
+                print("✅ \(series.name): Loaded \(races.count) races")
+            } catch {
+                let errorMsg = "\(series.name) API failed: \(error.localizedDescription)"
+                print("❌ \(errorMsg)")
+                errors.append(errorMsg)
+            }
+        }
+        
+        if !errors.isEmpty {
+            print("⚠️ Some APIs failed: \(errors.joined(separator: ", "))")
+        }
+        
+        if allRaces.isEmpty {
+            throw APIError.noDataAvailable("No racing data could be fetched from any API")
+        }
+        
+        // Filter for upcoming races only (from today onwards)
+        let today = Date()
+        let upcomingRaces = allRaces.filter { $0.date >= today }
+        
+        print("🏆 Total races fetched: \(allRaces.count)")
+        print("📅 Upcoming races: \(upcomingRaces.count)")
+        
+        return upcomingRaces.sorted { $0.date < $1.date }
+    }
+    
+    // MARK: - Generic Series Fetcher
+    private func fetchSeriesEvents(seriesId: String, seriesName: String, displayName: String) async throws -> [Race] {
+        let url = URL(string: "\(baseURL)/eventsseason.php?id=\(seriesId)&s=2025")!
+        print("🔗 \(displayName) API URL: \(url)")
+        
+        let (data, response) = try await session.data(from: url)
+        
+        if let httpResponse = response as? HTTPURLResponse {
+            print("📡 \(displayName) API Response: \(httpResponse.statusCode)")
+            if httpResponse.statusCode != 200 {
+                throw APIError.httpError(httpResponse.statusCode)
+            }
+        }
+        
+        print("📦 \(displayName) API Data size: \(data.count) bytes")
+        
         do {
-            let url = URL(string: "https://ergast.com/api/f1/current.json")!
-            let (data, _) = try await session.data(from: url)
-            let response = try JSONDecoder().decode(F1Response.self, from: data)
+            let apiResponse = try JSONDecoder().decode(SportsDBResponse.self, from: data)
             
-            return response.MRData.RaceTable.Races.compactMap { f1Race in
-                let dateFormatter = DateFormatter()
-                dateFormatter.dateFormat = "yyyy-MM-dd"
+            guard let events = apiResponse.events else {
+                print("❌ \(displayName) API returned no events")
+                throw APIError.noDataAvailable("\(displayName) API returned no events")
+            }
+            
+            print("📋 \(displayName) Raw events count: \(events.count)")
+            
+            let races = events.compactMap { event -> Race? in
+                guard let eventName = event.strEvent,
+                      let dateString = event.dateEvent,
+                      let date = parseEventDate(dateString) else {
+                    print("⚠️ Skipping \(displayName) event with missing data: \(event.strEvent ?? "Unknown")")
+                    return nil
+                }
                 
-                guard let date = dateFormatter.date(from: f1Race.date) else { return nil }
+                let venue = event.strVenue ?? "Unknown Venue"
+                let city = event.strCity ?? "Unknown City"
+                let country = event.strCountry ?? "Unknown Country"
+                let location = city != "Unknown City" && country != "Unknown Country" ? "\(city), \(country)" : venue
                 
                 return Race(
-                    name: f1Race.raceName,
-                    series: "F1",
+                    name: eventName,
+                    series: seriesName,
                     date: date,
-                    location: "\(f1Race.Circuit.Location.locality), \(f1Race.Circuit.Location.country)",
-                    circuit: f1Race.Circuit.circuitName
+                    location: location,
+                    circuit: venue
                 )
             }
-        } catch {
-            print("⚠️ Primary F1 API failed, using realistic mock data: \(error)")
-            // Return realistic F1 2024/2025 schedule data
-            return getRealisticF1Schedule()
+            
+            print("✅ \(displayName) Valid races parsed: \(races.count)")
+            return races
+            
+        } catch let decodingError {
+            print("❌ \(displayName) JSON decoding failed: \(decodingError)")
+            throw APIError.decodingError(decodingError)
         }
     }
     
-    private func getRealisticF1Schedule() -> [Race] {
-        let calendar = Calendar.current
-        let now = Date()
-        
-        return [
-            Race(name: "Italian Grand Prix", series: "F1",
-                 date: calendar.date(byAdding: .day, value: 3, to: now)!,
-                 location: "Monza, Italy", circuit: "Autodromo Nazionale Monza"),
-            Race(name: "Azerbaijan Grand Prix", series: "F1",
-                 date: calendar.date(byAdding: .day, value: 10, to: now)!,
-                 location: "Baku, Azerbaijan", circuit: "Baku City Circuit"),
-            Race(name: "Singapore Grand Prix", series: "F1",
-                 date: calendar.date(byAdding: .day, value: 17, to: now)!,
-                 location: "Singapore", circuit: "Marina Bay Street Circuit"),
-            Race(name: "United States Grand Prix", series: "F1",
-                 date: calendar.date(byAdding: .day, value: 24, to: now)!,
-                 location: "Austin, TX", circuit: "Circuit of the Americas"),
-            Race(name: "Mexican Grand Prix", series: "F1",
-                 date: calendar.date(byAdding: .day, value: 31, to: now)!,
-                 location: "Mexico City, Mexico", circuit: "Autódromo Hermanos Rodríguez"),
-            Race(name: "Brazilian Grand Prix", series: "F1",
-                 date: calendar.date(byAdding: .day, value: 38, to: now)!,
-                 location: "São Paulo, Brazil", circuit: "Interlagos"),
-            Race(name: "Las Vegas Grand Prix", series: "F1",
-                 date: calendar.date(byAdding: .day, value: 45, to: now)!,
-                 location: "Las Vegas, NV", circuit: "Las Vegas Strip Circuit"),
-            Race(name: "Qatar Grand Prix", series: "F1",
-                 date: calendar.date(byAdding: .day, value: 52, to: now)!,
-                 location: "Lusail, Qatar", circuit: "Lusail International Circuit"),
-            Race(name: "Abu Dhabi Grand Prix", series: "F1",
-                 date: calendar.date(byAdding: .day, value: 59, to: now)!,
-                 location: "Abu Dhabi, UAE", circuit: "Yas Marina Circuit")
-        ]
+    // MARK: - Legacy Methods Removed - Now Using Generic fetchSeriesEvents Method
+    
+    // MARK: - Date Parsing Helper
+    private func parseEventDate(_ dateString: String) -> Date? {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        let date = formatter.date(from: dateString)
+        if date == nil {
+            print("⚠️ Failed to parse date: \(dateString)")
+        }
+        return date
     }
     
     // MARK: - Test API Connection
     func testAPIConnection() async -> Bool {
         do {
-            let races = try await fetchF1Schedule()
-            print("✅ Racing data loaded successfully! Fetched \(races.count) F1 races")
-            return true
+            print("🔍 Testing TheSportsDB API connection with 2025 F1 data...")
+            let url = URL(string: "\(baseURL)/eventsseason.php?id=4370&s=2025")!
+            let (data, response) = try await session.data(from: url)
+            
+            if let httpResponse = response as? HTTPURLResponse {
+                print("📡 API Test Response: \(httpResponse.statusCode)")
+                if httpResponse.statusCode == 200 {
+                    print("📦 API Test Data size: \(data.count) bytes")
+                    
+                    // Try to parse and count upcoming events
+                    do {
+                        let apiResponse = try JSONDecoder().decode(SportsDBResponse.self, from: data)
+                        let eventCount = apiResponse.events?.count ?? 0
+                        print("📋 Found \(eventCount) F1 2025 events")
+                        
+                        // Count upcoming events
+                        let today = Date()
+                        let upcomingCount = apiResponse.events?.filter { event in
+                            guard let dateString = event.dateEvent,
+                                  let date = parseEventDate(dateString) else { return false }
+                            return date >= today
+                        }.count ?? 0
+                        
+                        print("📅 Upcoming F1 events: \(upcomingCount)")
+                        print("✅ TheSportsDB API connection successful!")
+                        return true
+                    } catch {
+                        print("⚠️ API connected but JSON parsing failed: \(error)")
+                        return true // Still connected, just parsing issue
+                    }
+                } else {
+                    print("❌ TheSportsDB API returned status: \(httpResponse.statusCode)")
+                    return false
+                }
+            } else {
+                print("❌ TheSportsDB API returned invalid response")
+                return false
+            }
         } catch {
-            print("❌ Racing data loading failed: \(error.localizedDescription)")
+            print("❌ TheSportsDB API connection failed: \(error.localizedDescription)")
+            if let urlError = error as? URLError {
+                print("❌ URL Error details: \(urlError.code.rawValue) - \(urlError.localizedDescription)")
+            }
             return false
         }
     }
     
-    // MARK: - Realistic data for other series (would be replaced with real APIs)
-    func fetchMockSeriesData() -> [Race] {
-        let calendar = Calendar.current
-        let now = Date()
-        
-        return [
-            // WEC - World Endurance Championship
-            Race(name: "6 Hours of Spa-Francorchamps", series: "WEC",
-                 date: calendar.date(byAdding: .day, value: 5, to: now)!,
-                 location: "Spa, Belgium", circuit: "Circuit de Spa-Francorchamps"),
-            Race(name: "6 Hours of Fuji", series: "WEC",
-                 date: calendar.date(byAdding: .day, value: 19, to: now)!,
-                 location: "Fuji, Japan", circuit: "Fuji Speedway"),
-            Race(name: "8 Hours of Bahrain", series: "WEC",
-                 date: calendar.date(byAdding: .day, value: 47, to: now)!,
-                 location: "Sakhir, Bahrain", circuit: "Bahrain International Circuit"),
-            
-            // IMSA
-            Race(name: "Petit Le Mans", series: "IMSA",
-                 date: calendar.date(byAdding: .day, value: 12, to: now)!,
-                 location: "Braselton, GA", circuit: "Road Atlanta"),
-            
-            // IndyCar
-            Race(name: "Grand Prix of Portland", series: "INDYCAR",
-                 date: calendar.date(byAdding: .day, value: 8, to: now)!,
-                 location: "Portland, OR", circuit: "Portland International Raceway"),
-            Race(name: "Firestone Grand Prix of Monterey", series: "INDYCAR",
-                 date: calendar.date(byAdding: .day, value: 15, to: now)!,
-                 location: "Monterey, CA", circuit: "WeatherTech Raceway Laguna Seca"),
-            
-            // MotoGP
-            Race(name: "Austrian Grand Prix", series: "MOTO GP",
-                 date: calendar.date(byAdding: .day, value: 6, to: now)!,
-                 location: "Spielberg, Austria", circuit: "Red Bull Ring"),
-            Race(name: "Aragon Grand Prix", series: "MOTO GP",
-                 date: calendar.date(byAdding: .day, value: 13, to: now)!,
-                 location: "Alcañiz, Spain", circuit: "MotorLand Aragón"),
-            Race(name: "Japanese Grand Prix", series: "MOTO GP",
-                 date: calendar.date(byAdding: .day, value: 27, to: now)!,
-                 location: "Motegi, Japan", circuit: "Twin Ring Motegi"),
-            
-            // NASCAR
-            Race(name: "Cook Out Southern 500", series: "NASCAR",
-                 date: calendar.date(byAdding: .day, value: 4, to: now)!,
-                 location: "Darlington, SC", circuit: "Darlington Raceway"),
-            Race(name: "Bass Pro Shops Night Race", series: "NASCAR",
-                 date: calendar.date(byAdding: .day, value: 11, to: now)!,
-                 location: "Bristol, TN", circuit: "Bristol Motor Speedway"),
-            Race(name: "Bank of America ROVAL 400", series: "NASCAR",
-                 date: calendar.date(byAdding: .day, value: 25, to: now)!,
-                 location: "Charlotte, NC", circuit: "Charlotte Motor Speedway ROVAL"),
-            
-            // Formula E
-            Race(name: "London E-Prix", series: "FE",
-                 date: calendar.date(byAdding: .day, value: 28, to: now)!,
-                 location: "London, UK", circuit: "ExCeL London"),
-            
-            // Formula 2
-            Race(name: "Monza Feature Race", series: "F2",
-                 date: calendar.date(byAdding: .day, value: 3, to: now)!,
-                 location: "Monza, Italy", circuit: "Autodromo Nazionale Monza"),
-            Race(name: "Baku Feature Race", series: "F2",
-                 date: calendar.date(byAdding: .day, value: 10, to: now)!,
-                 location: "Baku, Azerbaijan", circuit: "Baku City Circuit"),
-            
-            // WRC
-            Race(name: "Rally Chile", series: "WRC",
-                 date: calendar.date(byAdding: .day, value: 16, to: now)!,
-                 location: "Concepción, Chile"),
-            Race(name: "Central European Rally", series: "WRC",
-                 date: calendar.date(byAdding: .day, value: 30, to: now)!,
-                 location: "Czech Republic"),
-            
-            // DTM
-            Race(name: "DTM Hockenheim", series: "DTM",
-                 date: calendar.date(byAdding: .day, value: 22, to: now)!,
-                 location: "Hockenheim, Germany", circuit: "Hockenheimring"),
-            
-            // ELMS
-            Race(name: "4 Hours of Portimão", series: "ELMS",
-                 date: calendar.date(byAdding: .day, value: 18, to: now)!,
-                 location: "Portimão, Portugal", circuit: "Autódromo Internacional do Algarve"),
-            
-            // Mazda Cup
-            Race(name: "Mazda Cup Championship", series: "Mazda",
-                 date: calendar.date(byAdding: .day, value: 35, to: now)!,
-                 location: "Road Atlanta, GA", circuit: "Road Atlanta")
-        ]
+    // MARK: - No Mock Data - Real API Only
+}
+
+// MARK: - API Error Types
+enum APIError: Error, LocalizedError {
+    case httpError(Int)
+    case noDataAvailable(String)
+    case decodingError(Error)
+    
+    var errorDescription: String? {
+        switch self {
+        case .httpError(let code):
+            return "HTTP Error: \(code)"
+        case .noDataAvailable(let message):
+            return "No Data: \(message)"
+        case .decodingError(let error):
+            return "Decoding Error: \(error.localizedDescription)"
+        }
     }
 }
 
-// MARK: - F1 API Models
-struct F1Response: Codable {
-    let MRData: MRData
+// MARK: - TheSportsDB API Models
+struct SportsDBResponse: Codable {
+    let events: [SportsDBEvent]?
 }
 
-struct MRData: Codable {
-    let RaceTable: RaceTable
-}
-
-struct RaceTable: Codable {
-    let Races: [F1Race]
-}
-
-struct F1Race: Codable {
-    let raceName: String
-    let date: String
-    let Circuit: F1Circuit
-}
-
-struct F1Circuit: Codable {
-    let circuitName: String
-    let Location: F1Location
-}
-
-struct F1Location: Codable {
-    let locality: String
-    let country: String
+struct SportsDBEvent: Codable {
+    let idEvent: String?
+    let strEvent: String?
+    let strSport: String?
+    let strLeague: String?
+    let strSeason: String?
+    let dateEvent: String?
+    let strTime: String?
+    let strVenue: String?
+    let strCountry: String?
+    let strCity: String?
+    let strPoster: String?
+    let strThumb: String?
+    let strDescription: String?
+    let strStatus: String?
 }

@@ -60,7 +60,7 @@ extension View {
 //                ]),
 //                center: .center,
 //                startRadius: 80,
-//                endRadius: 600
+//                endRadius: 600 
 //            )
 //            .blendMode(.screen)
 //            .ignoresSafeArea()
