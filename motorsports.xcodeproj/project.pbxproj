@@ -6,14 +6,65 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		A1CE0EA92E5AB1CB00E29A49 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A1CE0EA82E5AB1CB00E29A49 /* WidgetKit.framework */; };
+		A1CE0EAB2E5AB1CB00E29A49 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A1CE0EAA2E5AB1CB00E29A49 /* SwiftUI.framework */; };
+		A1CE0EB62E5AB1CD00E29A49 /* MotorSportsWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A1CE0EA62E5AB1CB00E29A49 /* MotorSportsWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		A1CE0EB42E5AB1CD00E29A49 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A12105652E216566009A4D77 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A1CE0EA52E5AB1CB00E29A49;
+			remoteInfo = MotorSportsWidgetExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		A1CE0EBB2E5AB1CD00E29A49 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				A1CE0EB62E5AB1CD00E29A49 /* MotorSportsWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		A121056D2E216566009A4D77 /* motorsports.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = motorsports.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A1CE0EA62E5AB1CB00E29A49 /* MotorSportsWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MotorSportsWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		A1CE0EA82E5AB1CB00E29A49 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		A1CE0EAA2E5AB1CB00E29A49 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		A1CE0EB72E5AB1CD00E29A49 /* Exceptions for "MotorSportsWidget" folder in "MotorSportsWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = A1CE0EA52E5AB1CB00E29A49 /* MotorSportsWidgetExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		A121056F2E216566009A4D77 /* motorsports */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = motorsports;
+			sourceTree = "<group>";
+		};
+		A1CE0EAC2E5AB1CB00E29A49 /* MotorSportsWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				A1CE0EB72E5AB1CD00E29A49 /* Exceptions for "MotorSportsWidget" folder in "MotorSportsWidgetExtension" target */,
+			);
+			path = MotorSportsWidget;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -26,6 +77,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A1CE0EA32E5AB1CB00E29A49 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A1CE0EAB2E5AB1CB00E29A49 /* SwiftUI.framework in Frameworks */,
+				A1CE0EA92E5AB1CB00E29A49 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -33,6 +93,8 @@
 			isa = PBXGroup;
 			children = (
 				A121056F2E216566009A4D77 /* motorsports */,
+				A1CE0EAC2E5AB1CB00E29A49 /* MotorSportsWidget */,
+				A1CE0EA72E5AB1CB00E29A49 /* Frameworks */,
 				A121056E2E216566009A4D77 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,8 +103,18 @@
 			isa = PBXGroup;
 			children = (
 				A121056D2E216566009A4D77 /* motorsports.app */,
+				A1CE0EA62E5AB1CB00E29A49 /* MotorSportsWidgetExtension.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		A1CE0EA72E5AB1CB00E29A49 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				A1CE0EA82E5AB1CB00E29A49 /* WidgetKit.framework */,
+				A1CE0EAA2E5AB1CB00E29A49 /* SwiftUI.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -55,10 +127,12 @@
 				A12105692E216566009A4D77 /* Sources */,
 				A121056A2E216566009A4D77 /* Frameworks */,
 				A121056B2E216566009A4D77 /* Resources */,
+				A1CE0EBB2E5AB1CD00E29A49 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				A1CE0EB52E5AB1CD00E29A49 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				A121056F2E216566009A4D77 /* motorsports */,
@@ -69,6 +143,28 @@
 			productName = motorsports;
 			productReference = A121056D2E216566009A4D77 /* motorsports.app */;
 			productType = "com.apple.product-type.application";
+		};
+		A1CE0EA52E5AB1CB00E29A49 /* MotorSportsWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A1CE0EB82E5AB1CD00E29A49 /* Build configuration list for PBXNativeTarget "MotorSportsWidgetExtension" */;
+			buildPhases = (
+				A1CE0EA22E5AB1CB00E29A49 /* Sources */,
+				A1CE0EA32E5AB1CB00E29A49 /* Frameworks */,
+				A1CE0EA42E5AB1CB00E29A49 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				A1CE0EAC2E5AB1CB00E29A49 /* MotorSportsWidget */,
+			);
+			name = MotorSportsWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = MotorSportsWidgetExtension;
+			productReference = A1CE0EA62E5AB1CB00E29A49 /* MotorSportsWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -81,6 +177,9 @@
 				LastUpgradeCheck = 1640;
 				TargetAttributes = {
 					A121056C2E216566009A4D77 = {
+						CreatedOnToolsVersion = 16.4;
+					};
+					A1CE0EA52E5AB1CB00E29A49 = {
 						CreatedOnToolsVersion = 16.4;
 					};
 				};
@@ -100,12 +199,20 @@
 			projectRoot = "";
 			targets = (
 				A121056C2E216566009A4D77 /* motorsports */,
+				A1CE0EA52E5AB1CB00E29A49 /* MotorSportsWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		A121056B2E216566009A4D77 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A1CE0EA42E5AB1CB00E29A49 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -122,7 +229,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A1CE0EA22E5AB1CB00E29A49 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		A1CE0EB52E5AB1CD00E29A49 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A1CE0EA52E5AB1CB00E29A49 /* MotorSportsWidgetExtension */;
+			targetProxy = A1CE0EB42E5AB1CD00E29A49 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		A12105772E216567009A4D77 /* Debug */ = {
@@ -323,6 +445,65 @@
 			};
 			name = Release;
 		};
+		A1CE0EB92E5AB1CD00E29A49 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 7RWMCRQ389;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MotorSportsWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = MotorSportsWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = vaidik.motorsports.MotorSportsWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		A1CE0EBA2E5AB1CD00E29A49 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 7RWMCRQ389;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MotorSportsWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = MotorSportsWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = vaidik.motorsports.MotorSportsWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -340,6 +521,15 @@
 			buildConfigurations = (
 				A121057A2E216567009A4D77 /* Debug */,
 				A121057B2E216567009A4D77 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A1CE0EB82E5AB1CD00E29A49 /* Build configuration list for PBXNativeTarget "MotorSportsWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A1CE0EB92E5AB1CD00E29A49 /* Debug */,
+				A1CE0EBA2E5AB1CD00E29A49 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
