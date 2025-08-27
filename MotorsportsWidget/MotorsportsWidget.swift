@@ -33,7 +33,14 @@ struct MotorsportsWidget: Widget {
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: RaceProvider()) { entry in
-            UpcomingRacesWidgetView(entry: entry)
+            if #available(iOS 17.0, *) {
+                UpcomingRacesWidgetView(entry: entry)
+                    .containerBackground(.fill.tertiary, for: .widget)
+            } else {
+                UpcomingRacesWidgetView(entry: entry)
+                    .padding()
+                    .background()
+            }
         }
         .configurationDisplayName("Upcoming Races")
         .description("View your upcoming motorsports races at a glance")
@@ -45,7 +52,7 @@ struct RaceEntry: TimelineEntry {
     let date: Date
     let races: [Race]
     let isLoading: Bool
-    let error: String?
+    let error: String? 
 }
 
 struct RaceProvider: TimelineProvider {
@@ -122,201 +129,130 @@ struct SmallWidgetView: View {
     let entry: RaceEntry
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Image(systemName: "flag.checkered")
-                    .foregroundColor(Color.racingRed)
-                    .font(.caption)
-                
-                Text("Next Race")
-                    .font(.caption)
-                    .fontWeight(.medium)
-                    .foregroundColor(.white)
-                
-                Spacer()
-            }
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Next")
+                .font(.caption2)
+                .fontWeight(.medium)
+                .foregroundColor(.secondary)
+                .textCase(.uppercase)
             
             if let nextRace = entry.races.first {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(nextRace.name)
-                        .font(.caption)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.white)
-                        .lineLimit(2)
-                    
+                VStack(alignment: .leading, spacing: 3) {
                     Text(nextRace.series)
-                        .font(.caption2)
-                        .foregroundColor(Color.racingRed)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(
-                            Capsule()
-                                .fill(Color.racingRed.opacity(0.2))
-                        )
+                        .font(.headline)
+                        .fontWeight(.bold)
+                        .foregroundColor(.primary)
                     
                     Text(timeUntilRace(nextRace.date))
-                        .font(.caption2)
-                        .foregroundColor(.gray)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                 }
             } else {
-                Text("No upcoming races")
-                    .font(.caption)
-                    .foregroundColor(.gray)
+                Text("No races")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
             }
             
             Spacer()
         }
-        .padding(12)
-        .background(
-            LinearGradient(
-                gradient: Gradient(colors: [Color.black, Color(.systemGray6).opacity(0.3)]),
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        )
+        .padding()
     }
 }
 
 struct MediumWidgetView: View {
     let entry: RaceEntry
     
+    var uniqueSeries: [String] {
+        Array(Set(entry.races.map { $0.series })).sorted()
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Image(systemName: "flag.checkered")
-                    .foregroundColor(Color.racingRed)
-                    .font(.subheadline)
-                
-                Text("Upcoming Races")
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.white)
-                
-                Spacer()
-                
-                Text("\(entry.races.count)")
-                    .font(.caption)
-                    .foregroundColor(.gray)
-            }
+            Text("Upcoming Series")
+                .font(.caption2)
+                .fontWeight(.medium)
+                .foregroundColor(.secondary)
+                .textCase(.uppercase)
             
-            VStack(spacing: 6) {
-                ForEach(Array(entry.races.prefix(3)), id: \.id) { race in
+            VStack(spacing: 4) {
+                ForEach(Array(uniqueSeries.prefix(3)), id: \.self) { series in
                     HStack {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(race.name)
-                                .font(.caption)
-                                .fontWeight(.medium)
-                                .foregroundColor(.white)
-                                .lineLimit(1)
-                            
-                            HStack(spacing: 4) {
-                                Text(race.series)
-                                    .font(.caption2)
-                                    .foregroundColor(Color.racingRed)
-                                
-                                Text("•")
-                                    .font(.caption2)
-                                    .foregroundColor(.gray)
-                                
-                                Text(timeUntilRace(race.date))
-                                    .font(.caption2)
-                                    .foregroundColor(.gray)
-                            }
-                        }
+                        Text(series)
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.primary)
                         
                         Spacer()
+                        
+                        if let nextRace = entry.races.first(where: { $0.series == series }) {
+                            Text(timeUntilRace(nextRace.date))
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
                     }
-                    .padding(.vertical, 2)
                 }
             }
             
             Spacer()
         }
-        .padding(12)
-        .background(
-            LinearGradient(
-                gradient: Gradient(colors: [Color.black, Color(.systemGray6).opacity(0.3)]),
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        )
+        .padding()
     }
 }
 
 struct LargeWidgetView: View {
     let entry: RaceEntry
     
+    var uniqueSeries: [String] {
+        Array(Set(entry.races.map { $0.series })).sorted()
+    }
+    
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Image(systemName: "flag.checkered")
-                    .foregroundColor(Color.racingRed)
-                    .font(.title3)
-                
-                Text("Upcoming Races")
-                    .font(.title3)
-                    .fontWeight(.bold)
-                    .foregroundColor(.white)
-                
-                Spacer()
-                
-                Text("\(entry.races.count) races")
-                    .font(.caption)
-                    .foregroundColor(.gray)
-            }
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Upcoming Series")
+                .font(.caption2)
+                .fontWeight(.medium)
+                .foregroundColor(.secondary)
+                .textCase(.uppercase)
             
-            ScrollView {
-                VStack(spacing: 8) {
-                    ForEach(Array(entry.races.prefix(6)), id: \.id) { race in
-                        HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(race.name)
-                                    .font(.subheadline)
-                                    .fontWeight(.semibold)
-                                    .foregroundColor(.white)
-                                    .lineLimit(1)
-                                
-                                HStack(spacing: 8) {
-                                    Text(race.series)
-                                        .font(.caption)
-                                        .foregroundColor(Color.racingRed)
-                                        .padding(.horizontal, 6)
-                                        .padding(.vertical, 2)
-                                        .background(
-                                            Capsule()
-                                                .fill(Color.racingRed.opacity(0.2))
-                                        )
-                                    
-                                    Text(race.location)
-                                        .font(.caption)
-                                        .foregroundColor(.gray)
-                                }
-                                
-                                Text(timeUntilRace(race.date))
-                                    .font(.caption)
-                                    .foregroundColor(.gray)
-                            }
+            VStack(spacing: 6) {
+                ForEach(Array(uniqueSeries.prefix(5)), id: \.self) { series in
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(series)
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.primary)
                             
-                            Spacer()
+                            if let nextRace = entry.races.first(where: { $0.series == series }) {
+                                Text(nextRace.name)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .lineLimit(1)
+                            }
                         }
-                        .padding(.vertical, 4)
-                        .padding(.horizontal, 8)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(Color(.systemGray6).opacity(0.1))
-                        )
+                        
+                        Spacer()
+                        
+                        if let nextRace = entry.races.first(where: { $0.series == series }) {
+                            VStack(alignment: .trailing, spacing: 1) {
+                                Text(timeUntilRace(nextRace.date))
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.primary)
+                                
+                                Text(nextRace.location)
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
                     }
+                    .padding(.vertical, 4)
                 }
             }
+            
+            Spacer()
         }
-        .padding(16)
-        .background(
-            LinearGradient(
-                gradient: Gradient(colors: [Color.black, Color(.systemGray6).opacity(0.3)]),
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        )
+        .padding()
     }
 }
 
