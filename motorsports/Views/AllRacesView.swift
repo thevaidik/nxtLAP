@@ -126,7 +126,7 @@ struct SeriesRow: View {
             }
             
             Button(action: {
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                withAnimation(.spring( dampingFraction: 1)) {
                     dataService.toggleStarredSeries(series.shortName)
                     print("⭐ Toggled star for \(series.shortName), starred: \(dataService.isSeriesStarred(series.shortName))")
                 }

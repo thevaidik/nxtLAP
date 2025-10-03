@@ -8,7 +8,7 @@ struct HomeView: View {
         ZStack{
             //RacingBackground() //make background later
             VStack {
-                Text("Motorsports.AI")
+                Text("NxtLAP")
                     .font(.largeTitle)
                     .fontWeight(.bold)
                     .padding(.top)
@@ -21,7 +21,7 @@ struct HomeView: View {
                     .frame(width: 100, height: 100)
                     .foregroundColor(.racingRed)
                 
-                Text("Welcome to Motorsports.AI")
+                Text("Welcome to NxtLAP")
                     .font(.title2)
                     .padding()
                 

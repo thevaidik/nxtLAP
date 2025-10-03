@@ -2,7 +2,7 @@
 //  RacingDataService.swift
 //  motorsports
 //
-//  Created by Kiro on 20/08/25.
+//  Created by Vaidik Dubey on 20/08/25.
 //
 
 import Foundation
@@ -19,8 +19,7 @@ class RacingDataService: ObservableObject {
     init() {
         loadRacingSeries()
         Task {
-            await loadRacingData()
-        }
+            await loadRacingData()         }
     }
     
     private func loadRacingSeries() {
@@ -91,14 +90,6 @@ class RacingDataService: ObservableObject {
         print("🔄 Starting to load racing data from APIs...")
         
         do {
-            // Test API connection first
-            print("🔍 Testing TheSportsDB API connection...")
-            let isConnected = await apiService.testAPIConnection()
-            
-            if isConnected {
-                apiConnectionStatus = "✅ TheSportsDB Connected"
-                print("✅ TheSportsDB API connection successful")
-                
                 // Fetch all racing data from TheSportsDB - NO MOCK DATA
                 print("📡 Fetching real racing data from TheSportsDB...")
                 let realRaces = try await apiService.fetchAllRacingData()
@@ -116,17 +107,13 @@ class RacingDataService: ObservableObject {
                         .mapValues { $0.count }
                     print("📊 Races by series: \(racesBySeriesCount)")
                 }
-            } else {
-                apiConnectionStatus = "❌ API Connection Failed"
-                print("❌ TheSportsDB API connection failed - NO FALLBACK DATA")
-                upcomingRaces = []
-            }
-            
+        
         } catch {
             print("❌ CRITICAL ERROR loading racing data: \(error)")
             print("❌ Error details: \(error.localizedDescription)")
             if let urlError = error as? URLError {
                 print("❌ URL Error code: \(urlError.code.rawValue)")
+                
                 print("❌ URL Error description: \(urlError.localizedDescription)")
             }
             apiConnectionStatus = "❌ Error: \(error.localizedDescription)"

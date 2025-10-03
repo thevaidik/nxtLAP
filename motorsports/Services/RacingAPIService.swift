@@ -2,14 +2,14 @@
 //  RacingAPIService.swift
 //  motorsports
 //
-//  Created by Kiro on 20/08/25.
+//  Created by Vaidik Dubey on 20/08/25.
 //
 
 import Foundation
 
 class RacingAPIService: ObservableObject {
     private let session = URLSession.shared
-    private let baseURL = "https://www.thesportsdb.com/api/v1/json/3"
+    static let baseURL = "https://www.thesportsdb.com/api/v1/json/3"
     
     // MARK: - TheSportsDB API Integration - Real Data Only (2025 Season)
     func fetchAllRacingData() async throws -> [Race] {
@@ -63,7 +63,7 @@ class RacingAPIService: ObservableObject {
     
     // MARK: - Generic Series Fetcher
     private func fetchSeriesEvents(seriesId: String, seriesName: String, displayName: String) async throws -> [Race] {
-        let url = URL(string: "\(baseURL)/eventsseason.php?id=\(seriesId)&s=2025")!
+        let url = URL(string: "\(RacingAPIService.baseURL)/eventsseason.php?id=\(seriesId)&s=2025")!
         print("🔗 \(displayName) API URL: \(url)")
         
         let (data, response) = try await session.data(from: url)
@@ -129,56 +129,6 @@ class RacingAPIService: ObservableObject {
             print("⚠️ Failed to parse date: \(dateString)")
         }
         return date
-    }
-    
-    // MARK: - Test API Connection
-    func testAPIConnection() async -> Bool {
-        do {
-            print("🔍 Testing TheSportsDB API connection with 2025 F1 data...")
-            let url = URL(string: "\(baseURL)/eventsseason.php?id=4370&s=2025")!
-            let (data, response) = try await session.data(from: url)
-            
-            if let httpResponse = response as? HTTPURLResponse {
-                print("📡 API Test Response: \(httpResponse.statusCode)")
-                if httpResponse.statusCode == 200 {
-                    print("📦 API Test Data size: \(data.count) bytes")
-                    
-                    // Try to parse and count upcoming events
-                    do {
-                        let apiResponse = try JSONDecoder().decode(SportsDBResponse.self, from: data)
-                        let eventCount = apiResponse.events?.count ?? 0
-                        print("📋 Found \(eventCount) F1 2025 events")
-                        
-                        // Count upcoming events
-                        let today = Date()
-                        let upcomingCount = apiResponse.events?.filter { event in
-                            guard let dateString = event.dateEvent,
-                                  let date = parseEventDate(dateString) else { return false }
-                            return date >= today
-                        }.count ?? 0
-                        
-                        print("📅 Upcoming F1 events: \(upcomingCount)")
-                        print("✅ TheSportsDB API connection successful!")
-                        return true
-                    } catch {
-                        print("⚠️ API connected but JSON parsing failed: \(error)")
-                        return true // Still connected, just parsing issue
-                    }
-                } else {
-                    print("❌ TheSportsDB API returned status: \(httpResponse.statusCode)")
-                    return false
-                }
-            } else {
-                print("❌ TheSportsDB API returned invalid response")
-                return false
-            }
-        } catch {
-            print("❌ TheSportsDB API connection failed: \(error.localizedDescription)")
-            if let urlError = error as? URLError {
-                print("❌ URL Error details: \(urlError.code.rawValue) - \(urlError.localizedDescription)")
-            }
-            return false
-        }
     }
     
     // MARK: - No Mock Data - Real API Only
