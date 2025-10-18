@@ -13,9 +13,6 @@ class RacingAPIService: ObservableObject {
     
     // MARK: - TheSportsDB API Integration - Real Data Only (2025 Season)
     func fetchAllRacingData() async throws -> [Race] {
-        var allRaces: [Race] = []
-        var errors: [String] = []
-        
         // Fetch all racing series with 2025 data (only series with upcoming events)
         let seriesData: [(name: String, id: String, shortName: String)] = [
             ("Formula 1", "4370", "F1"),                    // 27 upcoming events
@@ -30,18 +27,52 @@ class RacingAPIService: ObservableObject {
             ("British GT Championship", "4410", "BGT")      // 1 upcoming event
         ]
         
-        for series in seriesData {
-            print("🏁 Fetching \(series.name) events...")
-            do {
-                let races = try await fetchSeriesEvents(seriesId: series.id, seriesName: series.shortName, displayName: series.name)
+        print("🏁 Fetching all \(seriesData.count) racing series in parallel...")
+        let startTime = Date()
+        
+        // PARALLEL EXECUTION: Launch all API calls simultaneously using TaskGroup
+        let results = await withTaskGroup(of: (String, Result<[Race], Error>).self) { group in
+            // Add a task for each series - all execute concurrently
+            for series in seriesData {
+                group.addTask {
+                    do {
+                        let races = try await self.fetchSeriesEvents(
+                            seriesId: series.id,
+                            seriesName: series.shortName,
+                            displayName: series.name
+                        )
+                        print("✅ \(series.name): Loaded \(races.count) races")
+                        return (series.name, .success(races))
+                    } catch {
+                        print("❌ \(series.name) API failed: \(error.localizedDescription)")
+                        return (series.name, .failure(error))
+                    }
+                }
+            }
+            
+            // Collect all results as they complete
+            var collectedResults: [(String, Result<[Race], Error>)] = []
+            for await result in group {
+                collectedResults.append(result)
+            }
+            return collectedResults
+        }
+        
+        // Process results: separate successes from failures
+        var allRaces: [Race] = []
+        var errors: [String] = []
+        
+        for (seriesName, result) in results {
+            switch result {
+            case .success(let races):
                 allRaces.append(contentsOf: races)
-                print("✅ \(series.name): Loaded \(races.count) races")
-            } catch {
-                let errorMsg = "\(series.name) API failed: \(error.localizedDescription)"
-                print("❌ \(errorMsg)")
-                errors.append(errorMsg)
+            case .failure(let error):
+                errors.append("\(seriesName): \(error.localizedDescription)")
             }
         }
+        
+        let duration = Date().timeIntervalSince(startTime)
+        print("⏱️ Parallel fetch completed in \(String(format: "%.2f", duration)) seconds")
         
         if !errors.isEmpty {
             print("⚠️ Some APIs failed: \(errors.joined(separator: ", "))")
