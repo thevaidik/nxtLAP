@@ -80,15 +80,6 @@ struct MyRacesView: View {
             }
             .navigationTitle("My Racing Series")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Test Star") {
-                        dataService.toggleStarredSeries("F1")
-                        print("🧪 Test button pressed - F1 starred: \(dataService.isSeriesStarred("F1"))")
-                    }
-                    .font(.caption)
-                }
-            }
         }
         .preferredColorScheme(.dark)
     }

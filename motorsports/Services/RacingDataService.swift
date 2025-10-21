@@ -15,11 +15,28 @@ class RacingDataService: ObservableObject {
     @Published var apiConnectionStatus: String = "Not tested"
     
     private let apiService = RacingAPIService()
+    private let starredSeriesKey = "starredRacingSeries"
     
     init() {
         loadRacingSeries()
+        loadStarredSeries()
         Task {
             await loadRacingData()         }
+    }
+    
+    private func loadStarredSeries() {
+        if let savedData = UserDefaults.standard.array(forKey: starredSeriesKey) as? [String] {
+            starredSeries = Set(savedData)
+            print("📂 Loaded \(starredSeries.count) starred series from storage: \(starredSeries)")
+        } else {
+            print("📂 No saved starred series found")
+        }
+    }
+    
+    private func saveStarredSeries() {
+        let seriesArray = Array(starredSeries)
+        UserDefaults.standard.set(seriesArray, forKey: starredSeriesKey)
+        print("💾 Saved \(starredSeries.count) starred series to storage: \(starredSeries)")
     }
     
     private func loadRacingSeries() {
@@ -138,6 +155,7 @@ class RacingDataService: ObservableObject {
             print("✅ Added \(seriesShortName) to starred series")
         }
         
+        saveStarredSeries()
         print("📊 Updated starred series: \(starredSeries)")
         print("📋 Starred series list count: \(starredSeriesList.count)")
     }
