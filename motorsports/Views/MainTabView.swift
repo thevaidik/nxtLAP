@@ -6,6 +6,7 @@ import SwiftUI
 struct MainTabView: View {
     @StateObject private var racingDataService = RacingDataService()
     @State private var selectedTab: Tab = .home
+    @State private var selectedUpcomingTab: UpcomingRacesView.UpcomingTab = .all
     
     enum Tab {
         case home, upcoming, myRaces, all
@@ -14,13 +15,13 @@ struct MainTabView: View {
     var body: some View {
         TabView(selection: $selectedTab) {
             
-            HomeView(selectedTab: $selectedTab)
+            HomeView(selectedTab: $selectedTab, selectedUpcomingTab: $selectedUpcomingTab)
                 .tabItem {
                     Label("Home", systemImage: "house.fill")
                 }
                 .tag(Tab.home)
             
-            UpcomingRacesView()
+            UpcomingRacesView(selectedUpcomingTab: $selectedUpcomingTab)
                 .tabItem {
                     Label("Upcoming", systemImage: "calendar")
                     

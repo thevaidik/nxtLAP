@@ -6,6 +6,7 @@ import SwiftUI
 struct HomeView: View {
     @EnvironmentObject var dataService: RacingDataService
     @Binding var selectedTab: MainTabView.Tab
+    @Binding var selectedUpcomingTab: UpcomingRacesView.UpcomingTab
     
     var nextRace: Race? {
         dataService.upcomingRacesForStarredSeries.first
@@ -202,6 +203,7 @@ struct HomeView: View {
                         Spacer()
                         
                         Button(action: {
+                            selectedUpcomingTab = .my
                             selectedTab = .upcoming
                         }) {
                             HStack(spacing: 4) {
@@ -512,6 +514,7 @@ struct StatCard: View {
 
 #Preview {
     @Previewable @State var selectedTab: MainTabView.Tab = .home
-    HomeView(selectedTab: $selectedTab)
+    @Previewable @State var selectedUpcomingTab: UpcomingRacesView.UpcomingTab = .all
+    HomeView(selectedTab: $selectedTab, selectedUpcomingTab: $selectedUpcomingTab)
         .environmentObject(RacingDataService())
 }

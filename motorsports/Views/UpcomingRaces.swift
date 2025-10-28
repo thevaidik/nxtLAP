@@ -9,7 +9,7 @@ import SwiftUI
 
 struct UpcomingRacesView: View {
     @EnvironmentObject var dataService: RacingDataService
-    @State private var selectedTab: UpcomingTab = .all
+    @Binding var selectedUpcomingTab: UpcomingTab
     
     enum UpcomingTab: String, CaseIterable {
         case all = "All Upcoming"
@@ -24,18 +24,18 @@ struct UpcomingRacesView: View {
                     ForEach(UpcomingTab.allCases, id: \.self) { tab in
                         Button(action: {
                             withAnimation(.easeInOut(duration: 0.3)) {
-                                selectedTab = tab
+                                selectedUpcomingTab = tab
                             }
                         }) {
                             Text(tab.rawValue)
                                 .font(.subheadline)
                                 .fontWeight(.medium)
-                                .foregroundColor(selectedTab == tab ? .white : .gray)
+                                .foregroundColor(selectedUpcomingTab == tab ? .white : .gray)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 12)
                                 .background(
                                     RoundedRectangle(cornerRadius: 12)
-                                        .fill(selectedTab == tab ? 
+                                        .fill(selectedUpcomingTab == tab ? 
                                               LinearGradient(
                                                 gradient: Gradient(colors: [.racingRed, .racingRed.opacity(0.8)]),
                                                 startPoint: .leading,
@@ -66,7 +66,7 @@ struct UpcomingRacesView: View {
                 .padding(.bottom, 16)
                 
                 Group {
-                    switch selectedTab {
+                    switch selectedUpcomingTab {
                     case .all:
                         AllUpcomingView()
                     case .my:
@@ -304,6 +304,7 @@ struct UpcomingRaceRow: View {
 }
 
 #Preview {
-    UpcomingRacesView()
+    @Previewable @State var selectedTab: UpcomingRacesView.UpcomingTab = .all
+    UpcomingRacesView(selectedUpcomingTab: $selectedTab)
         .environmentObject(RacingDataService())
 }
