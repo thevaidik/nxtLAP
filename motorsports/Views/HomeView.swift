@@ -123,7 +123,7 @@ struct HomeView: View {
                         Image(systemName: "star.fill")
                             .font(.system(size: 16, weight: .semibold))
                         
-                        Text("Browse Racing Series")
+                        Text("Pick your Favorites")
                             .font(.body)
                             .fontWeight(.semibold)
                     }

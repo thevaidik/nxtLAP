@@ -9,9 +9,12 @@ import SwiftUI
 
 @main
 struct motorsportsApp: App {
+    @StateObject private var racingDataService = RacingDataService()
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(racingDataService)
         }
     }
 }

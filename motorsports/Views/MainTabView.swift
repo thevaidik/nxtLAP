@@ -4,7 +4,7 @@
 import SwiftUI
 
 struct MainTabView: View {
-    @StateObject private var racingDataService = RacingDataService()
+    @EnvironmentObject var racingDataService: RacingDataService
     @State private var selectedTab: Tab = .home
     @State private var selectedUpcomingTab: UpcomingRacesView.UpcomingTab = .all
     
@@ -43,7 +43,6 @@ struct MainTabView: View {
         }
         .accentColor(.racingRed)
         .preferredColorScheme(.dark)
-        .environmentObject(racingDataService)
     }
 }
 
