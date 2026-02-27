@@ -117,12 +117,15 @@ class RacingDataService: ObservableObject {
                     upcomingRaces = []
                 } else {
                     print("✅ Successfully loaded \(realRaces.count) real races from TheSportsDB API")
-                    upcomingRaces = realRaces.sorted { $0.date < $1.date }
+                    let today = Calendar.current.startOfDay(for: Date())
+                    upcomingRaces = realRaces
+                        .filter { Calendar.current.startOfDay(for: $0.date) >= today }
+                        .sorted { $0.date < $1.date }
                     
                     // Log race breakdown by series
-                    let racesBySeriesCount = Dictionary(grouping: realRaces, by: { $0.series })
+                    let racesBySeriesCount = Dictionary(grouping: upcomingRaces, by: { $0.series })
                         .mapValues { $0.count }
-                    print("📊 Races by series: \(racesBySeriesCount)")
+                    print("📊 Upcoming races by series: \(racesBySeriesCount)")
                 }
         
         } catch {

@@ -140,10 +140,19 @@ struct SeriesRow: View {
         }
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.systemGray6).opacity(0.1))
+                .fill(
+                    LinearGradient(
+                        gradient: Gradient(colors: [
+                            Color(red: 35/255, green: 35/255, blue: 35/255),
+                            Color(red: 20/255, green: 20/255, blue: 20/255)
+                        ]),
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
                 .overlay(
                     RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                        .stroke(Color(white: 0.2), lineWidth: 1)
                 )
         )
     }
