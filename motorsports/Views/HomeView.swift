@@ -88,7 +88,10 @@ struct HomeView: View {
                     }
                     
                     // Main Content
-                    if dataService.starredSeriesList.isEmpty {
+                    if dataService.isLoadingData && dataService.upcomingRaces.isEmpty {
+                        RacingLoadingView()
+                            .padding(.top, 40)
+                    } else if dataService.starredSeriesList.isEmpty {
                         emptyStateView
                     } else {
                         racesContentView
