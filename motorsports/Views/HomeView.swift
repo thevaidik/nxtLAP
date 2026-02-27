@@ -312,14 +312,17 @@ struct NextRaceCard: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // Series Badge
             Text(race.series)
                 .font(.caption2)
                 .fontWeight(.bold)
                 .foregroundColor(.white)
-                .padding(8)
-                .background(Color.orange)
-                .clipShape(Circle())
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(Color(.systemGray5).opacity(0.8))
+                .clipShape(Capsule())
+                .overlay(
+                    Capsule().stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                )
             
             // Race Name
             Text(race.name)
@@ -421,11 +424,17 @@ struct UpcomingWeekendCard: View {
                 
                 Spacer()
                 
-                Circle() // Placeholder for flag
-                    .fill(Color.red)
-                    .frame(width: 24, height: 24)
-                    .overlay(Circle().stroke(Color.white, lineWidth: 1))
-                    .shadow(radius: 2)
+                Text(group.series)
+                    .font(.caption2)
+                    .fontWeight(.bold)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color(.systemGray5).opacity(0.8))
+                    .clipShape(Capsule())
+                    .overlay(
+                        Capsule().stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                    )
             }
             .padding(.horizontal, 16)
             .padding(.top, 16)
@@ -441,7 +450,7 @@ struct UpcomingWeekendCard: View {
             // Sessions
             VStack(spacing: 8) {
                 ForEach(group.sessions) { session in
-                    SessionRow(race: session)
+                    SessionRow(race: session, groupSeries: group.series)
                 }
             }
             .padding(.horizontal, 16)
@@ -461,6 +470,7 @@ struct UpcomingWeekendCard: View {
 // MARK: - Session Row
 struct SessionRow: View {
     let race: Race
+    let groupSeries: String
     
     var sessionType: String {
         let name = race.name.uppercased()
@@ -473,15 +483,16 @@ struct SessionRow: View {
     }
     
     var sessionColor: Color {
-        switch sessionType {
-        case "FP1": return .racingRed
-        case "FP2": return .purple
-        case "FP3": return .blue
-        case "Quali": return .green
-        case "Sprint": return .orange
-        case "Race": return .orange
-        default: return .gray
-        }
+        let name = race.name.uppercased()
+        if name.contains("SPRINT") { return .orange }
+        if name.contains("PRACTICE 1") || name.contains("FP1") { return .racingRed }
+        if name.contains("PRACTICE 2") || name.contains("FP2") { return .purple }
+        if name.contains("PRACTICE 3") || name.contains("FP3") { return .blue }
+        if name.contains("QUALIFYING") || name.contains("QUALI") { return .green }
+        
+        let colors: [Color] = [.racingRed, .blue, .green, .orange, .purple, .pink, .cyan, .mint, .indigo, .teal]
+        let index = abs(race.name.hashValue) % colors.count
+        return colors[index]
     }
     
     var body: some View {
@@ -597,6 +608,13 @@ struct StatCard: View {
                 )
         )
     }
+}
+
+// MARK: - Color Helper
+func seriesColor(for seriesName: String) -> Color {
+    let colors: [Color] = [.red, .blue, .green, .orange, .purple, .cyan, .pink, .indigo, .mint, .yellow]
+    let index = abs(seriesName.hashValue) % colors.count
+    return colors[index]
 }
 
 #Preview {
