@@ -72,10 +72,10 @@ struct Provider: TimelineProvider {
     func getSnapshot(in context: Context, completion: @escaping (RaceEntry) -> ()) {
         let all = loadSharedRaces() ?? sampleRaces()
         let starred = loadStarredSeries()
-        let top3 = filteredTopThree(from: all, starred: starred)
+        let topRaces = filteredRaces(from: all, starred: starred)
         let entry = RaceEntry(
             date: Date(),
-            races: top3,
+            races: topRaces,
             isLoading: false,
             error: nil
         )
@@ -88,8 +88,8 @@ struct Provider: TimelineProvider {
 
         let all = loadSharedRaces() ?? sampleRaces()
         let starred = loadStarredSeries()
-        let top3 = filteredTopThree(from: all, starred: starred)
-        let entry = RaceEntry(date: currentDate, races: top3, isLoading: false, error: nil)
+        let topRaces = filteredRaces(from: all, starred: starred)
+        let entry = RaceEntry(date: currentDate, races: topRaces, isLoading: false, error: nil)
 
         let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
         completion(timeline)
@@ -128,20 +128,22 @@ struct Provider: TimelineProvider {
     
     private func isMainRace(_ name: String) -> Bool {
         let upper = name.uppercased()
-        let nonRaceTokens = ["PRACTICE", "FP1", "FP2", "FP3", "QUALIFYING", "QUALI", "SPRINT", "WARMUP"]
+        // Sprint is a race, so we removing it from nonRaceTokens.
+        // Practice, Qualifying, Warmup etc are not main events.
+        let nonRaceTokens = ["PRACTICE", "FP1", "FP2", "FP3", "QUALIFYING", "QUALI", "WARMUP", "TESTING"]
         return !nonRaceTokens.contains(where: { upper.contains($0) })
     }
 
-    private func filteredTopThree(from races: [SharedRace], starred: Set<String>?) -> [SharedRace] {
+    private func filteredRaces(from races: [SharedRace], starred: Set<String>?) -> [SharedRace] {
+        guard let starred = starred, !starred.isEmpty else {
+            return [] // Show empty state if no series are starred
+        }
+        
         // Consider only main race sessions
         let mainRaces = races.filter { isMainRace($0.name) }
         let base = mainRaces.isEmpty ? races : mainRaces
-        if let starred = starred, !starred.isEmpty {
-            let filtered = base.filter { starred.contains($0.series) }
-            return Array((filtered.isEmpty ? base : filtered).prefix(3))
-        } else {
-            return Array(base.prefix(3))
-        }
+        let filtered = base.filter { starred.contains($0.series) }
+        return Array(filtered.prefix(5))
     }
 
     private func sampleRaces() -> [SharedRace] {
@@ -154,47 +156,114 @@ struct Provider: TimelineProvider {
 }
 
 struct RaceWidgetEntryView: View {
+    @Environment(\.widgetFamily) var family
     var entry: RaceEntry
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("My Next Races")
-                .font(.caption2)
-                .fontWeight(.medium)
-                .foregroundColor(.secondary)
-                .textCase(.uppercase)
-
-            if entry.races.isEmpty {
-                Text("No starred races")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+        ZStack {
+            if let firstRace = entry.races.first {
+                Color.black.opacity(0.1) // Subtle background base
+                
+                if family == .systemSmall {
+                    smallWidgetView(race: firstRace)
+                } else {
+                    mediumLargeWidgetView(races: entry.races)
+                }
             } else {
-                VStack(alignment: .leading, spacing: 6) {
-                    ForEach(entry.races.prefix(3)) { race in
-                        HStack(alignment: .firstTextBaseline) {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(race.series)
-                                    .font(.subheadline)
-                                    .fontWeight(.semibold)
-                                    .foregroundColor(.primary)
-                                    .lineLimit(1)
-                                Text(race.name)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                    .lineLimit(1)
-                            }
-                            Spacer()
-                            Text(timeUntilRace(race.date))
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                emptyStateView()
+            }
+        }
+    }
+    
+    // MARK: - Small Widget (1 Race)
+    @ViewBuilder
+    private func smallWidgetView(race: SharedRace) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            // Series Badge
+            Text(race.series)
+                .font(.system(size: 14, weight: .black, design: .rounded))
+                .foregroundColor(.white)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(Color.red)
+                .cornerRadius(6)
+            
+            Spacer(minLength: 0)
+            
+            // Race Details
+            Text(race.name)
+                .font(.system(size: 16, weight: .bold))
+                .foregroundColor(.primary)
+                .lineLimit(2)
+                .minimumScaleFactor(0.8)
+            
+            HStack {
+                Image(systemName: "calendar")
+                    .foregroundColor(.red)
+                Text(timeUntilRace(race.date))
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.primary)
+                Spacer()
+            }
+            .padding(.top, 2)
+        }
+        .padding()
+    }
+    
+    // MARK: - Medium/Large Widget (List)
+    @ViewBuilder
+    private func mediumLargeWidgetView(races: [SharedRace]) -> some View {
+        let maxCount = family == .systemMedium ? 3 : 5
+        VStack(alignment: .leading, spacing: 8) {
+            Text("NEXT RACES")
+                .font(.system(size: 12, weight: .black, design: .rounded))
+                .foregroundColor(.red)
+            
+            Divider()
+            
+            VStack(alignment: .leading, spacing: 10) {
+                ForEach(races.prefix(maxCount)) { race in
+                    HStack(alignment: .center, spacing: 12) {
+                        Text(race.series)
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(.white)
+                            .frame(width: 50, alignment: .center)
+                            .padding(.vertical, 4)
+                            .background(Color.red.opacity(0.8))
+                            .cornerRadius(4)
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(race.name)
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(.primary)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.8)
                         }
+                        
+                        Spacer(minLength: 4)
+                        
+                        Text(timeUntilRace(race.date))
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(.secondary)
                     }
                 }
             }
-
             Spacer(minLength: 0)
         }
         .padding()
+    }
+    
+    // MARK: - Empty State
+    @ViewBuilder
+    private func emptyStateView() -> some View {
+        VStack(spacing: 8) {
+            Image(systemName: "flag.checkered")
+                .font(.system(size: 30))
+                .foregroundColor(.secondary.opacity(0.5))
+            Text("No upcoming races")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(.secondary)
+        }
     }
 }
 
@@ -220,16 +289,9 @@ struct RaceWidget: Widget {
 
 // Helper function
 private func timeUntilRace(_ date: Date) -> String {
-    let cal = Calendar.current
-    let todayStart = cal.startOfDay(for: Date())
-    let raceDayStart = cal.startOfDay(for: date)
-    let dayCount = cal.dateComponents([.day], from: todayStart, to: raceDayStart).day ?? 0
-    switch dayCount {
-    case 0: return "Today"
-    case 1: return "Tomorrow"
-    case let x where x > 1: return "in \(x) days"
-    default: return "Past"
-    }
+    let formatter = DateFormatter()
+    formatter.dateFormat = "MMM d"
+    return formatter.string(from: date)
 }
 
 #Preview(as: .systemSmall) {
