@@ -6,6 +6,22 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		A119675F2F562190001578E6 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A1CE0EA82E5AB1CB00E29A49 /* WidgetKit.framework */; };
+		A11967602F562190001578E6 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A1CE0EAA2E5AB1CB00E29A49 /* SwiftUI.framework */; };
+		A119676B2F562191001578E6 /* RaceWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A119675E2F562190001578E6 /* RaceWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		A11967692F562191001578E6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A12105652E216566009A4D77 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A119675D2F562190001578E6;
+			remoteInfo = RaceWidgetExtension;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXCopyFilesBuildPhase section */
 		A1CE0EBB2E5AB1CD00E29A49 /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
@@ -13,6 +29,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
+				A119676B2F562191001578E6 /* RaceWidgetExtension.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -20,25 +37,59 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		A119675E2F562190001578E6 /* RaceWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = RaceWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		A121056D2E216566009A4D77 /* NxtLAP.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NxtLAP.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A127B71D2F5E063600B09A41 /* RaceWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RaceWidgetExtension.entitlements; sourceTree = "<group>"; };
 		A1CE0EA82E5AB1CB00E29A49 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		A1CE0EAA2E5AB1CB00E29A49 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		A119676C2F562191001578E6 /* Exceptions for "RaceWidget" folder in "RaceWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = A119675D2F562190001578E6 /* RaceWidgetExtension */;
+		};
+		A11967762F5621DA001578E6 /* Exceptions for "motorsports" folder in "RaceWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Models/RacingModels.swift,
+			);
+			target = A119675D2F562190001578E6 /* RaceWidgetExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		A121056F2E216566009A4D77 /* motorsports */ = {
+		A11967612F562190001578E6 /* RaceWidget */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = motorsports;
+			exceptions = (
+				A119676C2F562191001578E6 /* Exceptions for "RaceWidget" folder in "RaceWidgetExtension" target */,
+			);
+			path = RaceWidget;
 			sourceTree = "<group>";
 		};
-		A1CE0EAC2E5AB1CB00E29A49 /* NxtLAPWidget */ = {
+		A121056F2E216566009A4D77 /* motorsports */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = NxtLAPWidget;
+			exceptions = (
+				A11967762F5621DA001578E6 /* Exceptions for "motorsports" folder in "RaceWidgetExtension" target */,
+			);
+			path = motorsports;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		A119675B2F562190001578E6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A11967602F562190001578E6 /* SwiftUI.framework in Frameworks */,
+				A119675F2F562190001578E6 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A121056A2E216566009A4D77 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -52,8 +103,9 @@
 		A12105642E216566009A4D77 = {
 			isa = PBXGroup;
 			children = (
+				A127B71D2F5E063600B09A41 /* RaceWidgetExtension.entitlements */,
 				A121056F2E216566009A4D77 /* motorsports */,
-				A1CE0EAC2E5AB1CB00E29A49 /* NxtLAPWidget */,
+				A11967612F562190001578E6 /* RaceWidget */,
 				A1CE0EA72E5AB1CB00E29A49 /* Frameworks */,
 				A121056E2E216566009A4D77 /* Products */,
 			);
@@ -63,6 +115,7 @@
 			isa = PBXGroup;
 			children = (
 				A121056D2E216566009A4D77 /* NxtLAP.app */,
+				A119675E2F562190001578E6 /* RaceWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -79,6 +132,28 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		A119675D2F562190001578E6 /* RaceWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A119676D2F562191001578E6 /* Build configuration list for PBXNativeTarget "RaceWidgetExtension" */;
+			buildPhases = (
+				A119675A2F562190001578E6 /* Sources */,
+				A119675B2F562190001578E6 /* Frameworks */,
+				A119675C2F562190001578E6 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				A11967612F562190001578E6 /* RaceWidget */,
+			);
+			name = RaceWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = RaceWidgetExtension;
+			productReference = A119675E2F562190001578E6 /* RaceWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		A121056C2E216566009A4D77 /* NxtLAP */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = A12105792E216567009A4D77 /* Build configuration list for PBXNativeTarget "NxtLAP" */;
@@ -91,6 +166,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				A119676A2F562191001578E6 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				A121056F2E216566009A4D77 /* motorsports */,
@@ -109,9 +185,12 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 2600;
+				LastSwiftUpdateCheck = 2630;
 				LastUpgradeCheck = 1640;
 				TargetAttributes = {
+					A119675D2F562190001578E6 = {
+						CreatedOnToolsVersion = 26.3;
+					};
 					A121056C2E216566009A4D77 = {
 						CreatedOnToolsVersion = 16.4;
 					};
@@ -132,11 +211,19 @@
 			projectRoot = "";
 			targets = (
 				A121056C2E216566009A4D77 /* NxtLAP */,
+				A119675D2F562190001578E6 /* RaceWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		A119675C2F562190001578E6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A121056B2E216566009A4D77 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -147,6 +234,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		A119675A2F562190001578E6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A12105692E216566009A4D77 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -156,7 +250,82 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		A119676A2F562191001578E6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A119675D2F562190001578E6 /* RaceWidgetExtension */;
+			targetProxy = A11967692F562191001578E6 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		A119676E2F562191001578E6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = RaceWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 7RWMCRQ389;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = RaceWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = RaceWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = vaidik.motorsports.RaceWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		A119676F2F562191001578E6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = RaceWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 7RWMCRQ389;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = RaceWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = RaceWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = vaidik.motorsports.RaceWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 		A12105772E216567009A4D77 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -362,6 +531,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		A119676D2F562191001578E6 /* Build configuration list for PBXNativeTarget "RaceWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A119676E2F562191001578E6 /* Debug */,
+				A119676F2F562191001578E6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		A12105682E216566009A4D77 /* Build configuration list for PBXProject "NxtLAP" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

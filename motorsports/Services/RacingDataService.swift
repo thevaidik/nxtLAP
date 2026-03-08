@@ -6,6 +6,9 @@
 //
 
 import Foundation
+#if canImport(WidgetKit)
+import WidgetKit
+#endif
 
 class RacingDataService: ObservableObject {
     @Published var allSeries: [RacingSeries] = []
@@ -16,6 +19,37 @@ class RacingDataService: ObservableObject {
     
     private let apiService = RacingAPIService()
     private let starredSeriesKey = "starredRacingSeries"
+    
+    // MARK: - Widget/App Group Sharing
+    // TODO: Set this to your real App Group ID and enable it in BOTH the app target and the widget extension target entitlements
+    private let appGroupID = "group.vaidik.motorsports"
+    private let widgetUpcomingKey = "widget_upcoming_races"
+    private let widgetStarredKey = "widget_starred_series"
+
+    private func syncWidgetData() {
+        let encoder = JSONEncoder()
+        // Ensure stable date encoding/decoding
+        encoder.dateEncodingStrategy = .iso8601
+
+        // Save upcoming races for the widget
+        if let defaults = UserDefaults(suiteName: appGroupID) {
+            do {
+                let data = try encoder.encode(upcomingRaces)
+                defaults.set(data, forKey: widgetUpcomingKey)
+                defaults.set(Array(starredSeries), forKey: widgetStarredKey)
+                defaults.synchronize()
+            } catch {
+                print("❌ Failed to encode upcoming races for widget: \(error)")
+            }
+        } else {
+            print("⚠️ App Group defaults unavailable. Check App Group ID: \(appGroupID)")
+        }
+
+        #if canImport(WidgetKit)
+        // Ask WidgetKit to refresh timelines
+        WidgetCenter.shared.reloadAllTimelines()
+        #endif
+    }
     
     init() {
         loadRacingSeries()
@@ -115,13 +149,14 @@ class RacingDataService: ObservableObject {
                     print("⚠️ WARNING: No races returned from API")
                     apiConnectionStatus = "⚠️ API Connected but No Data"
                     upcomingRaces = []
+                    syncWidgetData()
                 } else {
                     print("✅ Successfully loaded \(realRaces.count) real races from TheSportsDB API")
                     let today = Calendar.current.startOfDay(for: Date())
                     upcomingRaces = realRaces
                         .filter { Calendar.current.startOfDay(for: $0.date) >= today }
                         .sorted { $0.date < $1.date }
-                    
+                    syncWidgetData()
                     // Log race breakdown by series
                     let racesBySeriesCount = Dictionary(grouping: upcomingRaces, by: { $0.series })
                         .mapValues { $0.count }
@@ -138,6 +173,7 @@ class RacingDataService: ObservableObject {
             }
             apiConnectionStatus = "❌ Error: \(error.localizedDescription)"
             upcomingRaces = []
+            syncWidgetData()
         }
         
         isLoadingData = false
@@ -159,6 +195,7 @@ class RacingDataService: ObservableObject {
         }
         
         saveStarredSeries()
+        syncWidgetData()
         print("📊 Updated starred series: \(starredSeries)")
         print("📋 Starred series list count: \(starredSeriesList.count)")
     }
@@ -185,3 +222,4 @@ class RacingDataService: ObservableObject {
         await loadRacingData()
     }
 }
+
