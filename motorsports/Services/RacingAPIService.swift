@@ -9,7 +9,15 @@ import Foundation
 
 class RacingAPIService: ObservableObject {
     private let session = URLSession.shared
-    static let baseURL = "https://brto98doc9.execute-api.us-east-1.amazonaws.com"
+    
+    // Toggle this to true to use the test server
+    static let useTestServer = true
+    
+    static var baseURL: String {
+        return useTestServer 
+            ? "https://kvez79e5ib.execute-api.us-east-1.amazonaws.com" // Test server
+            : "https://brto98doc9.execute-api.us-east-1.amazonaws.com" // Production server
+    }
     
     // MARK: - New Racing Server API Integration
     

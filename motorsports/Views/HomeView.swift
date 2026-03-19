@@ -30,7 +30,17 @@ struct HomeView: View {
         
         var groups: [String: [Race]] = [:]
         for race in allUpcoming {
-            let key = "\(race.series)_\(race.location)"
+            // Use circuit name for grouping so different venues in the same country
+            // (e.g. Miami, Austin, Las Vegas — all "United States") don't collapse together.
+            // Fall back to the first two words of the event name if circuit is nil/empty.
+            let venueKey: String
+            if let circuit = race.circuit, !circuit.isEmpty {
+                venueKey = circuit
+            } else {
+                let words = race.name.components(separatedBy: " ")
+                venueKey = words.prefix(2).joined(separator: " ")
+            }
+            let key = "\(race.series)_\(venueKey)"
             groups[key, default: []].append(race)
         }
         

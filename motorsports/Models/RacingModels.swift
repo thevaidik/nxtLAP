@@ -81,7 +81,7 @@ struct RacingServerEvent: Codable {
     let date: String
     let country: String
     let season: String
-    let round: Int
+    let round: Int?
     let description: String?  // Optional because some events don't have descriptions
     let ttl: Int
     
