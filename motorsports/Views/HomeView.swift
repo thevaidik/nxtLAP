@@ -79,18 +79,18 @@ struct HomeView: View {
                             
                             Spacer()
                             
-                            // Bell with small gear
-                            ZStack(alignment: .topTrailing) {
-                                Image(systemName: "bell.fill")
-                                    .font(.system(size: 32))
-                                    .foregroundColor(.racingRed)
-                                    .shadow(color: .racingRed.opacity(0.3), radius: 5, x: 0, y: 2)
-                                
-                                Image(systemName: "gearshape.fill")
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.orange)
-                                    .offset(x: 4, y: -4)
-                            }
+//                            // Bell with small gear
+//                            ZStack(alignment: .topTrailing) {
+//                                Image(systemName: "bell.fill")
+//                                    .font(.system(size: 32))
+//                                    .foregroundColor(.racingRed)
+//                                    .shadow(color: .racingRed.opacity(0.3), radius: 5, x: 0, y: 2)
+//                                
+//                                Image(systemName: "gearshape.fill")
+//                                    .font(.system(size: 14))
+//                                    .foregroundColor(.orange)
+//                                    .offset(x: 4, y: -4)
+//                            }
                         }
                         .padding(.horizontal, 20)
                         .padding(.top, 20)
@@ -356,15 +356,15 @@ struct NextRaceCard: View {
                         .font(.subheadline)
                         .foregroundColor(.white)
                     
-                    Circle()
-                        .fill(Color.clear)
-                        .frame(width: 14, height: 14)
-                        .overlay(
-                            Image(systemName: "circle.fill")
-                                .resizable()
-                                .foregroundColor(.red) // Placeholder for flag
-                        )
-                        .overlay(Circle().stroke(Color.white, lineWidth: 1))
+//                    Circle()
+//                        .fill(Color.clear)
+//                        .frame(width: 14, height: 14)
+//                        .overlay(
+//                            Image(systemName: "circle.fill")
+//                                .resizable()
+//                                .foregroundColor(.red) // Placeholder for flag
+//                        )
+//                        .overlay(Circle().stroke(Color.white, lineWidth: 1))
                 }
                 
                 HStack(spacing: 12) {
