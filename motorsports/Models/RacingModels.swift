@@ -122,3 +122,33 @@ struct RacingServerEvent: Codable {
         }
     }
 }
+
+// MARK: - F1 Standings Models
+struct F1DriverStanding: Identifiable, Codable {
+    let id = UUID()
+    let position: Int
+    let driverNumber: Int
+    let points: Double
+
+    enum CodingKeys: String, CodingKey {
+        case position, points
+        case driverNumber = "driver_number"
+    }
+}
+
+struct F1ConstructorStanding: Identifiable, Codable {
+    let id = UUID()
+    let position: Int
+    let teamName: String
+    let points: Double
+
+    enum CodingKeys: String, CodingKey {
+        case position, points
+        case teamName = "team_name"
+    }
+}
+
+struct F1StandingsResponse: Codable {
+    let drivers: [F1DriverStanding]
+    let constructors: [F1ConstructorStanding]
+}

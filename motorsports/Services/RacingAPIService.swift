@@ -115,6 +115,30 @@ class RacingAPIService: ObservableObject {
         return races.sorted { $0.date < $1.date }
     }
     
+    /// Fetch F1 driver and constructor standings
+    func fetchF1Standings() async throws -> F1StandingsResponse {
+        let url = URL(string: "\(RacingAPIService.baseURL)/f1/standings")!
+        print("🔗 Fetching F1 standings from: \(url)")
+        
+        let (data, response) = try await session.data(from: url)
+        
+        if let httpResponse = response as? HTTPURLResponse {
+            print("📡 F1 Standings Response: \(httpResponse.statusCode)")
+            if httpResponse.statusCode != 200 {
+                throw APIError.httpError(httpResponse.statusCode)
+            }
+        }
+        
+        do {
+            let standings = try JSONDecoder().decode(F1StandingsResponse.self, from: data)
+            print("✅ F1 standings: \(standings.drivers.count) drivers, \(standings.constructors.count) constructors")
+            return standings
+        } catch {
+            print("❌ F1 standings decoding error: \(error)")
+            throw APIError.decodingError(error)
+        }
+    }
+    
     /// Check API health
     func checkHealth() async throws -> Bool {
         let url = URL(string: "\(RacingAPIService.baseURL)/health")!
