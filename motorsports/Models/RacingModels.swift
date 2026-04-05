@@ -46,14 +46,16 @@ struct Race: Identifiable, Codable {
     let location: String
     let circuit: String?
     let isStarred: Bool
+    let hasExactTime: Bool
     
-    init(name: String, series: String, date: Date, location: String, circuit: String? = nil, isStarred: Bool = false) {
+    init(name: String, series: String, date: Date, location: String, circuit: String? = nil, isStarred: Bool = false, hasExactTime: Bool = true) {
         self.name = name
         self.series = series
         self.date = date
         self.location = location
         self.circuit = circuit
         self.isStarred = isStarred
+        self.hasExactTime = hasExactTime
     }
 }
 
@@ -97,13 +99,16 @@ struct RacingServerEvent: Codable {
         // Map series slug to display name
         let seriesDisplayName = mapSeriesToDisplayName(series)
         
+        let exactTime = !date.hasSuffix("T00:00:00Z")
+        
         return Race(
             name: event_name,
             series: seriesDisplayName,
             date: eventDate,
             location: country,
             circuit: circuit.isEmpty ? nil : circuit,
-            isStarred: false
+            isStarred: false,
+            hasExactTime: exactTime
         )
     }
     

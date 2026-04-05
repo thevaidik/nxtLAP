@@ -18,21 +18,32 @@ struct WeekendGroup: Identifiable {
 struct HomeView: View {
     @EnvironmentObject var dataService: RacingDataService
     @Binding var selectedTab: MainTabView.Tab
-    @Binding var selectedUpcomingTab: UpcomingRacesView.UpcomingTab
     
-    var nextRace: Race? {
-        dataService.upcomingRacesForStarredSeries.first
+    private enum HomeWeekSegment: String, CaseIterable {
+        case thisWeek = "This week"
+        case nextWeek = "Next week"
     }
     
-    var upcomingWeekendGroups: [WeekendGroup] {
+    @State private var weekSegment: HomeWeekSegment = .thisWeek
+    
+    private func isInThisWeek(_ date: Date) -> Bool {
+        Calendar.current.isDate(date, equalTo: Date(), toGranularity: .weekOfYear)
+    }
+    
+    private func isInNextWeek(_ date: Date) -> Bool {
+        let cal = Calendar.current
+        guard let thisWeekStart = cal.date(from: cal.dateComponents([.yearForWeekOfYear, .weekOfYear], from: Date())),
+              let nextWeekStart = cal.date(byAdding: .weekOfYear, value: 1, to: thisWeekStart) else { return false }
+        return cal.isDate(date, equalTo: nextWeekStart, toGranularity: .weekOfYear)
+    }
+    
+    /// Grouped weekends, sorted by first session; title uses the **last** session (e.g. Grand Prix race), not practice.
+    private var upcomingWeekendGroups: [WeekendGroup] {
         let allUpcoming = dataService.upcomingRacesForStarredSeries
         guard !allUpcoming.isEmpty else { return [] }
         
         var groups: [String: [Race]] = [:]
         for race in allUpcoming {
-            // Use circuit name for grouping so different venues in the same country
-            // (e.g. Miami, Austin, Las Vegas — all "United States") don't collapse together.
-            // Fall back to the first two words of the event name if circuit is nil/empty.
             let venueKey: String
             if let circuit = race.circuit, !circuit.isEmpty {
                 venueKey = circuit
@@ -44,20 +55,46 @@ struct HomeView: View {
             groups[key, default: []].append(race)
         }
         
-        let mapped = groups.compactMap { key, sessions -> WeekendGroup? in
-            guard let first = sessions.sorted(by: { $0.date < $1.date }).first else { return nil }
-            let components = first.name.components(separatedBy: " - ")
-            let displayName = components.first ?? first.name
-            return WeekendGroup(weekendName: displayName, location: first.location, sessions: sessions.sorted { $0.date < $1.date }, series: first.series)
+        let mapped = groups.compactMap { _, sessions -> WeekendGroup? in
+            let sortedSessions = sessions.sorted { $0.date < $1.date }
+            guard let lastForTitle = sortedSessions.last,
+                  let firstForMeta = sortedSessions.first else { return nil }
+            let components = lastForTitle.name.components(separatedBy: " - ")
+            let displayName = components.first ?? lastForTitle.name
+            return WeekendGroup(
+                weekendName: displayName,
+                location: firstForMeta.location,
+                sessions: sortedSessions,
+                series: firstForMeta.series
+            )
         }
         
-        let sortedGroups = mapped.sorted { 
+        return mapped.sorted {
             let d1 = $0.sessions.first?.date ?? Date.distantFuture
             let d2 = $1.sessions.first?.date ?? Date.distantFuture
             return d1 < d2
         }
-        
-        return Array(sortedGroups.prefix(5))
+    }
+    
+    private var thisWeekGroups: [WeekendGroup] {
+        upcomingWeekendGroups.filter { g in
+            guard let start = g.sessions.map(\.date).min() else { return false }
+            return isInThisWeek(start)
+        }
+    }
+    
+    private var nextWeekGroups: [WeekendGroup] {
+        upcomingWeekendGroups.filter { g in
+            guard let start = g.sessions.map(\.date).min() else { return false }
+            return isInNextWeek(start)
+        }
+    }
+    
+    private var activeWeekGroups: [WeekendGroup] {
+        switch weekSegment {
+        case .thisWeek: return thisWeekGroups
+        case .nextWeek: return nextWeekGroups
+        }
     }
     
     var body: some View {
@@ -216,286 +253,169 @@ struct HomeView: View {
     
     // MARK: - Races Content
     private var racesContentView: some View {
-        VStack(spacing: 24) {
-            // Next Race Hero Card
-            if let next = nextRace {
-                VStack(alignment: .leading, spacing: 16) {
-                    HStack {
-                        Text("Next Race")
-                            .font(.headline)
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                        
-                        Spacer()
-                        
-                        Text(timeUntilRaceDetails(next.date))
-                            .font(.caption)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.racingRed)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(
-                                Capsule()
-                                    .fill(Color.racingRed.opacity(0.15))
-                            )
-                    }
-                    .padding(.horizontal, 20)
-                    
-                    NextRaceCard(race: next)
-                        .padding(.horizontal, 20)
-                }
-                .padding(.bottom, 8)
+        VStack(spacing: 28) {
+            if upcomingWeekendGroups.isEmpty {
+                Text("No upcoming sessions for your favorite series right now.")
+                    .font(.subheadline)
+                    .foregroundColor(.gray)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+                    .padding(.top, 8)
             }
             
-            // Upcoming Races List
-            if !upcomingWeekendGroups.isEmpty {
-                VStack(alignment: .leading, spacing: 16) {
-                    HStack {
-                        Text("Upcoming Races")
-                            .font(.headline)
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                        
-                        Spacer()
-                        
-                        Button(action: {
-                            selectedUpcomingTab = .my
-                            selectedTab = .upcoming
-                        }) {
-                            HStack(spacing: 4) {
-                                Text("View All")
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
-                                Image(systemName: "chevron.right")
-                                    .font(.caption)
-                            }
-                            .foregroundColor(.racingRed)
-                        }
-                    }
-                    .padding(.horizontal, 20)
-                    
-                    LazyVStack(spacing: 20) {
-                        ForEach(upcomingWeekendGroups) { group in
-                            UpcomingWeekendCard(group: group)
-                        }
-                    }
-                    .padding(.horizontal, 20)
-                }
+            if thisWeekGroups.isEmpty && nextWeekGroups.isEmpty && !upcomingWeekendGroups.isEmpty {
+                Text("No races in this week or next week — check back soon.")
+                    .font(.subheadline)
+                    .foregroundColor(.gray)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 24)
             }
             
-            // Quick Stats
-            StatsSection()
+            if !upcomingWeekendGroups.isEmpty && (!thisWeekGroups.isEmpty || !nextWeekGroups.isEmpty) {
+                Picker("Week", selection: $weekSegment) {
+                    ForEach(HomeWeekSegment.allCases, id: \.self) { segment in
+                        Text(segment.rawValue).tag(segment)
+                    }
+                }
+                .pickerStyle(.segmented)
                 .padding(.horizontal, 20)
-                .padding(.top, 8)
+                .padding(.bottom, 4)
+            }
+            
+            if !activeWeekGroups.isEmpty {
+                LazyVStack(spacing: 14) {
+                    ForEach(Array(activeWeekGroups.enumerated()), id: \.element.id) { index, group in
+                        UpcomingWeekendCard(
+                            group: group,
+                            prominence: index == 0 ? .primary : .compact
+                        )
+                    }
+                }
+                .padding(.horizontal, 20)
+            } else if !thisWeekGroups.isEmpty || !nextWeekGroups.isEmpty {
+                Text(weekSegment == .thisWeek ? "No races this week." : "No races next week.")
+                    .font(.subheadline)
+                    .foregroundColor(.gray)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 8)
+            }
+            
+            HStack {
+                Spacer()
+                Button(action: { selectedTab = .watch }) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "play.rectangle.fill")
+                        Text("Watch live")
+                            .fontWeight(.semibold)
+                    }
+                    .font(.subheadline)
+                    .foregroundColor(.racingRed)
+                }
+            }
+            .padding(.horizontal, 20)
             
             Spacer()
                 .frame(height: 40)
         }
         .padding(.top, 8)
     }
-    
-    private func timeUntilRaceDetails(_ date: Date) -> String {
-        let calendar = Calendar.current
-        let now = Date()
-        let components = calendar.dateComponents([.day, .hour, .minute], from: now, to: date)
-        
-        if let days = components.day, let hours = components.hour, let mins = components.minute {
-            if days > 0 {
-                return "in \(days)d : \(hours)h : \(mins)m"
-            } else if hours > 0 {
-                return "in \(hours)h : \(mins)m"
-            } else if mins > 0 {
-                return "in \(mins)m"
-            } else {
-                return "Starting Soon"
-            }
-        }
-        return ""
-    }
-}
-
-// MARK: - Next Race Card
-struct NextRaceCard: View {
-    let race: Race
-    @EnvironmentObject var dataService: RacingDataService
-    
-    var raceSeries: RacingSeries? {
-        dataService.allSeries.first { $0.shortName == race.series }
-    }
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(race.series)
-                .font(.caption2)
-                .fontWeight(.bold)
-                .foregroundColor(.white)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
-                .background(Color(.systemGray5).opacity(0.8))
-                .clipShape(Capsule())
-                .overlay(
-                    Capsule().stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                )
-            
-            // Race Name
-            Text(race.name)
-                .font(.title3)
-                .fontWeight(.bold)
-                .foregroundColor(.white)
-                .lineLimit(1)
-            
-            // Location & Date
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(spacing: 10) {
-                    Image(systemName: "location.north.fill")
-                        .font(.caption)
-                        .foregroundColor(.racingRed)
-                        .rotationEffect(.degrees(45))
-                    
-                    Text(race.location)
-                        .font(.subheadline)
-                        .foregroundColor(.white)
-                    
-//                    Circle()
-//                        .fill(Color.clear)
-//                        .frame(width: 14, height: 14)
-//                        .overlay(
-//                            Image(systemName: "circle.fill")
-//                                .resizable()
-//                                .foregroundColor(.red) // Placeholder for flag
-//                        )
-//                        .overlay(Circle().stroke(Color.white, lineWidth: 1))
-                }
-                
-                HStack(spacing: 12) {
-                    Image(systemName: "calendar")
-                        .font(.caption)
-                        .foregroundColor(.racingRed)
-                    
-                    Text(formattedDate(race.date))
-                        .font(.subheadline)
-                        .foregroundColor(.gray)
-                }
-            }
-        }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            ZStack(alignment: .trailing) {
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(
-                        LinearGradient(
-                            gradient: Gradient(colors: [
-                                Color(red: 35/255, green: 35/255, blue: 35/255),
-                                Color(red: 20/255, green: 20/255, blue: 20/255)
-                            ]),
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                
-                // Dim outline graphic like circuit
-                Image(systemName: "triangle")
-                    .font(.system(size: 140))
-                    .foregroundColor(.white.opacity(0.03))
-                    .offset(x: 30, y: 10)
-                    .rotationEffect(.degrees(10))
-            }
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(
-                    LinearGradient(
-                        gradient: Gradient(colors: [.racingRed.opacity(0.4), .orange.opacity(0.1)]),
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    lineWidth: 1.5
-                )
-        )
-        .cornerRadius(16)
-    }
-    
-    private func formattedDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "EEEE, MMMM d 'at' HH:mm"
-        return formatter.string(from: date)
-    }
 }
 
 // MARK: - Upcoming Weekend Card
+enum WeekendCardProminence {
+    case primary
+    case compact
+}
+
 struct UpcomingWeekendCard: View {
     let group: WeekendGroup
+    var prominence: WeekendCardProminence = .primary
+    
+    private var venueLine: String {
+        let loc = group.location
+        if let c = group.sessions.first?.circuit, !c.isEmpty {
+            return "\(loc) · \(c)"
+        }
+        return loc
+    }
+    
+    private var isPrimary: Bool { prominence == .primary }
     
     var body: some View {
+        let corner: CGFloat = isPrimary ? 20 : 16
         VStack(alignment: .leading, spacing: 0) {
-            // Header Image/Circuit
-            HStack {
-                Image(systemName: "point.topleft.down.curvedto.point.bottomright.up") // Placeholder for circuit outline
-                    .font(.system(size: 36, weight: .light))
-                    .foregroundColor(.white.opacity(0.8))
+            VStack(alignment: .leading, spacing: isPrimary ? 10 : 6) {
+                HStack {
+                    Text(group.series)
+                        .font(.caption2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white.opacity(0.95))
+                        .padding(.horizontal, isPrimary ? 10 : 8)
+                        .padding(.vertical, isPrimary ? 5 : 4)
+                        .background(
+                            Capsule()
+                                .fill(Color.white.opacity(0.08))
+                                .overlay(Capsule().stroke(Color.white.opacity(0.12), lineWidth: 1))
+                        )
+                    Spacer()
+                }
                 
-                Spacer()
-                
-                Text(group.series)
-                    .font(.caption2)
+                Text(group.weekendName)
+                    .font(isPrimary ? .title2 : .headline)
                     .fontWeight(.bold)
                     .foregroundColor(.white)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color(.systemGray5).opacity(0.8))
-                    .clipShape(Capsule())
-                    .overlay(
-                        Capsule().stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                    )
-            }
-            .padding(.horizontal, 16)
-            .padding(.top, 16)
-            .padding(.bottom, 8)
-            
-            Text(group.weekendName)
-                .font(.title3)
-                .fontWeight(.bold)
-                .foregroundColor(.white)
-                .padding(.horizontal, 16)
-                .padding(.bottom, 16)
-            
-            // Sessions
-            VStack(spacing: 8) {
-                ForEach(group.sessions) { session in
-                    SessionRow(race: session, groupSeries: group.series)
+                    .fixedSize(horizontal: false, vertical: true)
+                
+                HStack(spacing: 6) {
+                    Image(systemName: "mappin.and.ellipse")
+                        .font(isPrimary ? .caption : .caption2)
+                        .foregroundColor(.racingRed.opacity(0.9))
+                    Text(venueLine)
+                        .font(isPrimary ? .subheadline : .caption)
+                        .foregroundColor(.gray)
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 16)
+            .padding(isPrimary ? 18 : 14)
+            
+            VStack(spacing: isPrimary ? 10 : 8) {
+                ForEach(group.sessions) { session in
+                    SessionRow(race: session, compact: !isPrimary)
+                }
+            }
+            .padding(.horizontal, isPrimary ? 14 : 10)
+            .padding(.bottom, isPrimary ? 16 : 12)
         }
         .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(red: 25/255, green: 25/255, blue: 25/255))
+            RoundedRectangle(cornerRadius: corner)
+                .fill(
+                    LinearGradient(
+                        colors: [Color(white: isPrimary ? 0.14 : 0.11), Color(white: 0.07)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(Color(white: 0.2), lineWidth: 1)
+            RoundedRectangle(cornerRadius: corner)
+                .stroke(
+                    LinearGradient(
+                        colors: [.white.opacity(isPrimary ? 0.14 : 0.1), .racingRed.opacity(isPrimary ? 0.28 : 0.18)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1
+                )
         )
+        .shadow(color: .black.opacity(isPrimary ? 0.35 : 0.22), radius: isPrimary ? 12 : 6, x: 0, y: isPrimary ? 6 : 3)
     }
 }
 
 // MARK: - Session Row
 struct SessionRow: View {
     let race: Race
-    let groupSeries: String
+    var compact: Bool = false
     
-    var sessionType: String {
-        let name = race.name.uppercased()
-        if name.contains("SPRINT") { return "Sprint" }
-        if name.contains("PRACTICE 1") || name.contains("FP1") { return "FP1" }
-        if name.contains("PRACTICE 2") || name.contains("FP2") { return "FP2" }
-        if name.contains("PRACTICE 3") || name.contains("FP3") { return "FP3" }
-        if name.contains("QUALIFYING") || name.contains("QUALI") { return "Quali" }
-        return "Race"
-    }
-    
-    var sessionColor: Color {
+    private var sessionColor: Color {
         let name = race.name.uppercased()
         if name.contains("SPRINT") { return .orange }
         if name.contains("PRACTICE 1") || name.contains("FP1") { return .racingRed }
@@ -509,117 +429,71 @@ struct SessionRow: View {
     }
     
     var body: some View {
-        HStack(spacing: 12) {
-            // Colored Pill
-            Text(sessionType)
-                .font(.caption2)
-                .fontWeight(.bold)
-                .foregroundColor(.white)
-                .frame(width: 44, height: 22)
-                .background(sessionColor)
-                .clipShape(Capsule())
+        HStack(alignment: .top, spacing: compact ? 8 : 12) {
+            RoundedRectangle(cornerRadius: 2)
+                .fill(sessionColor)
+                .frame(width: compact ? 2 : 3)
             
-            // Date String
-            Text(sessionDateString(race.date))
-                .font(.subheadline)
-                .foregroundColor(.gray)
-            
-            Spacer()
-            
-            // Countdown text
-            Text(countdownText(for: race.date))
-                .font(.caption)
-                .fontWeight(.medium)
-                .foregroundColor(sessionColor)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(
-                    Capsule().fill(sessionColor.opacity(0.15))
-                )
+            VStack(alignment: .leading, spacing: compact ? 4 : 6) {
+                HStack(alignment: .firstTextBaseline) {
+                    Text(race.name)
+                        .font(compact ? .caption : .subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.white)
+                        .fixedSize(horizontal: false, vertical: true)
+                    
+                    Spacer(minLength: 8)
+                    
+                    Text(countdownText(for: race))
+                        .font(compact ? .caption2 : .caption)
+                        .fontWeight(.semibold)
+                        .foregroundColor(sessionColor)
+                        .padding(.horizontal, compact ? 6 : 8)
+                        .padding(.vertical, compact ? 3 : 4)
+                        .background(Capsule().fill(sessionColor.opacity(0.18)))
+                }
+                
+                Text(sessionWhenString(race))
+                    .font(.caption2)
+                    .foregroundColor(.gray)
+            }
         }
+        .padding(.vertical, compact ? 8 : 10)
+        .padding(.horizontal, compact ? 10 : 12)
+        .background(
+            RoundedRectangle(cornerRadius: compact ? 10 : 12)
+                .fill(Color.white.opacity(0.04))
+        )
     }
     
-    private func sessionDateString(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "E, MMM d"
-        return formatter.string(from: date)
+    private func sessionWhenString(_ race: Race) -> String {
+        let dayFormatter = DateFormatter()
+        dayFormatter.dateFormat = "EEEE, MMM d"
+        var s = dayFormatter.string(from: race.date)
+        if race.hasExactTime {
+            let timeFormatter = DateFormatter()
+            timeFormatter.dateStyle = .none
+            timeFormatter.timeStyle = .short
+            s += " · " + timeFormatter.string(from: race.date)
+        }
+        return s
     }
     
-    private func countdownText(for date: Date) -> String {
+    private func countdownText(for race: Race) -> String {
         let calendar = Calendar.current
         let now = Date()
-        let components = calendar.dateComponents([.day, .hour], from: now, to: date)
+        let components = calendar.dateComponents([.day, .hour], from: now, to: race.date)
         
         guard let days = components.day, let hours = components.hour else { return "" }
         if days == 0 {
-            return hours == 0 ? "starts soon" : "in \(hours)h"
+            if race.hasExactTime {
+                return hours == 0 ? "Soon" : "in \(hours)h"
+            } else {
+                return "Today"
+            }
         } else {
             return "in \(days)d"
         }
-    }
-}
-
-// MARK: - Stats Section
-struct StatsSection: View {
-    @EnvironmentObject var dataService: RacingDataService
-    
-    var body: some View {
-        HStack(spacing: 12) {
-            StatCard(
-                icon: "star.fill",
-                value: "\(dataService.starredSeriesList.count)",
-                label: "Series",
-                color: .yellow
-            )
-            
-            StatCard(
-                icon: "calendar",
-                value: "\(dataService.upcomingRacesForStarredSeries.count)",
-                label: "Races",
-                color: .racingRed
-            )
-            
-            StatCard(
-                icon: "flag.checkered.2.crossed",
-                value: "\(dataService.allSeries.count)",
-                label: "Total",
-                color: .blue
-            )
-        }
-    }
-}
-
-struct StatCard: View {
-    let icon: String
-    let value: String
-    let label: String
-    let color: Color
-    
-    var body: some View {
-        VStack(spacing: 8) {
-            Image(systemName: icon)
-                .font(.system(size: 20))
-                .foregroundColor(color)
-            
-            Text(value)
-                .font(.title3)
-                .fontWeight(.bold)
-                .foregroundColor(.white)
-            
-            Text(label)
-                .font(.caption)
-                .foregroundColor(.gray)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 16)
-        .background(
-            RoundedRectangle(cornerRadius: 14)
-                .fill(Color(.systemGray6).opacity(0.08))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14)
-                        .stroke(color.opacity(0.2), lineWidth: 1)
-                )
-        )
     }
 }
 
@@ -632,7 +506,6 @@ func seriesColor(for seriesName: String) -> Color {
 
 #Preview {
     @Previewable @State var selectedTab: MainTabView.Tab = .home
-    @Previewable @State var selectedUpcomingTab: UpcomingRacesView.UpcomingTab = .all
-    HomeView(selectedTab: $selectedTab, selectedUpcomingTab: $selectedUpcomingTab)
+    HomeView(selectedTab: $selectedTab)
         .environmentObject(RacingDataService())
 }

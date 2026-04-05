@@ -180,7 +180,7 @@ struct SeriesRaceRow: View {
                 
                 Spacer()
                 
-                Text(formattedDate(race.date))
+                Text(formattedDate(race))
                     .font(.caption2)
                     .foregroundColor(.racingRed)
                     .fontWeight(.medium)
@@ -214,11 +214,11 @@ struct SeriesRaceRow: View {
         .cornerRadius(6)
     }
     
-    private func formattedDate(_ date: Date) -> String {
+    private func formattedDate(_ race: Race) -> String {
         let formatter = DateFormatter()
         formatter.dateStyle = .full
-        formatter.timeStyle = .short
-        return formatter.string(from: date)
+        formatter.timeStyle = race.hasExactTime ? .short : .none
+        return formatter.string(from: race.date)
     }
     
     private func timeUntilRace(_ date: Date) -> String {
