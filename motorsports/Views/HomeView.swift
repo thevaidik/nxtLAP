@@ -18,6 +18,7 @@ struct WeekendGroup: Identifiable {
 struct HomeView: View {
     @EnvironmentObject var dataService: RacingDataService
     @Binding var selectedTab: MainTabView.Tab
+    @StateObject private var newsViewModel = NewsViewModel()
     
     private enum HomeWeekSegment: String, CaseIterable {
         case thisWeek = "This week"
@@ -101,37 +102,22 @@ struct HomeView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 0) {
-                    // Header Section
-                    VStack(spacing: 8) {
+                    // Header Section with Stories
+                    VStack(spacing: 0) {
                         HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("NxtLAP")
-                                    .font(.system(size: 32, weight: .bold))
-                                    .foregroundColor(.white)
-                                
-                                Text("Your Racing Dashboard")
-                                    .font(.subheadline)
-                                    .foregroundColor(.gray)
-                            }
+                            Text("NxtLAP")
+                                .font(.system(size: 32, weight: .bold))
+                                .foregroundColor(.white)
                             
                             Spacer()
-                            
-//                            // Bell with small gear
-//                            ZStack(alignment: .topTrailing) {
-//                                Image(systemName: "bell.fill")
-//                                    .font(.system(size: 32))
-//                                    .foregroundColor(.racingRed)
-//                                    .shadow(color: .racingRed.opacity(0.3), radius: 5, x: 0, y: 2)
-//                                
-//                                Image(systemName: "gearshape.fill")
-//                                    .font(.system(size: 14))
-//                                    .foregroundColor(.orange)
-//                                    .offset(x: 4, y: -4)
-//                            }
                         }
                         .padding(.horizontal, 20)
                         .padding(.top, 20)
-                        .padding(.bottom, 24)
+                        
+                        // News Stories - Instagram style
+                        NewsStoriesView(newsViewModel: newsViewModel)
+                            .padding(.top, 16)
+                            .padding(.bottom, 8)
                     }
                     
                     // Main Content
@@ -159,6 +145,11 @@ struct HomeView: View {
             .navigationBarHidden(true)
         }
         .preferredColorScheme(.dark)
+        .task {
+            if newsViewModel.articles.isEmpty {
+                await newsViewModel.fetchNews()
+            }
+        }
     }
     
     // MARK: - Empty State
