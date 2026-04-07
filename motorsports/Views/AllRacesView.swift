@@ -127,10 +127,6 @@ struct SeriesRow: View {
     let series: RacingSeries
     @EnvironmentObject var dataService: RacingDataService
 
-    var seriesRaces: [Race] {
-        dataService.getRacesForSeries(series.shortName)
-    }
-
     var seriesGradient: LinearGradient {
         let gradients: [LinearGradient] = [
             LinearGradient(gradient: Gradient(colors: [.red, .orange]), startPoint: .topLeading, endPoint: .bottomTrailing),
@@ -173,32 +169,33 @@ struct SeriesRow: View {
                     Spacer()
 
                     HStack(spacing: 8) {
-                        if !seriesRaces.isEmpty {
-                            Text("\(seriesRaces.count) Race\(seriesRaces.count == 1 ? "" : "s")")
-                                .font(.caption)
-                                .foregroundColor(.racingRed)
-                                .fontWeight(.medium)
-                        }
-                        Image(systemName: "chevron.right")
-                            .font(.caption)
+                        Text("View")
+                            .font(.caption2)
                             .foregroundColor(.gray)
+                        Image(systemName: "chevron.right.circle.fill")
+                            .font(.subheadline)
+                            .foregroundColor(.racingRed.opacity(0.9))
                     }
                 }
                 .padding(.horizontal, 20)
                 .padding(.vertical, 16)
             }
 
-            Button(action: {
-                withAnimation(.default) {
-                    dataService.toggleStarredSeries(series.shortName)
-                }
-            }) {
-                Image(systemName: dataService.isSeriesStarred(series.shortName) ? "star.fill" : "star")
-                    .foregroundColor(dataService.isSeriesStarred(series.shortName) ? .yellow : .gray)
-                    .font(.system(size: 16, weight: .medium))
-            }
-            .buttonStyle(PlainButtonStyle())
-            .padding(.trailing, 20)
+            Toggle(
+                "",
+                isOn: Binding(
+                    get: { dataService.isSeriesStarred(series.shortName) },
+                    set: { _ in
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            dataService.toggleStarredSeries(series.shortName)
+                        }
+                    }
+                )
+            )
+            .labelsHidden()
+            .toggleStyle(.switch)
+            .tint(.racingRed)
+            .padding(.trailing, 18)
         }
         .background(
             RoundedRectangle(cornerRadius: 16)

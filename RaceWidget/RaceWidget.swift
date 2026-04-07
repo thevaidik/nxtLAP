@@ -160,10 +160,8 @@ struct RaceWidgetEntryView: View {
     var entry: RaceEntry
 
     var body: some View {
-        ZStack {
+        Group {
             if let firstRace = entry.races.first {
-                Color.black.opacity(0.1) // Subtle background base
-                
                 if family == .systemSmall {
                     smallWidgetView(race: firstRace)
                 } else {
@@ -173,84 +171,97 @@ struct RaceWidgetEntryView: View {
                 emptyStateView()
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
     
     // MARK: - Small Widget (1 Race)
     @ViewBuilder
     private func smallWidgetView(race: SharedRace) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            // Series Badge
+        VStack(alignment: .leading, spacing: 8) {
+            Text("NEXT RACE")
+                .font(.system(size: 10, weight: .bold, design: .rounded))
+                .foregroundColor(.gray)
+            
             Text(race.series)
-                .font(.system(size: 14, weight: .black, design: .rounded))
+                .font(.system(size: 12, weight: .black, design: .rounded))
                 .foregroundColor(.white)
                 .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(Color.red)
+                .padding(.vertical, 3)
+                .background(Color.red.opacity(0.9))
                 .cornerRadius(6)
             
             Spacer(minLength: 0)
             
-            // Race Details
             Text(race.name)
-                .font(.system(size: 16, weight: .bold))
-                .foregroundColor(.primary)
-                .lineLimit(2)
+                .font(.system(size: 14, weight: .bold))
+                .foregroundColor(.white)
+                .lineLimit(3)
                 .minimumScaleFactor(0.8)
             
-            HStack {
+            HStack(spacing: 6) {
                 Image(systemName: "calendar")
                     .foregroundColor(.red)
                 Text(timeUntilRace(race.date))
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.primary)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.white.opacity(0.9))
                 Spacer()
             }
-            .padding(.top, 2)
+            
+            Text(race.location)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundColor(.gray)
+                .lineLimit(1)
         }
-        .padding()
+        .padding(14)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
     
     // MARK: - Medium/Large Widget (List)
     @ViewBuilder
     private func mediumLargeWidgetView(races: [SharedRace]) -> some View {
-        let maxCount = family == .systemMedium ? 3 : 5
-        VStack(alignment: .leading, spacing: 8) {
+        let maxCount = family == .systemMedium ? 3 : 4
+        VStack(alignment: .leading, spacing: 10) {
             Text("NEXT RACES")
                 .font(.system(size: 12, weight: .black, design: .rounded))
                 .foregroundColor(.red)
             
-            Divider()
+            Divider().overlay(Color.white.opacity(0.14))
             
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: family == .systemMedium ? 9 : 10) {
                 ForEach(races.prefix(maxCount)) { race in
-                    HStack(alignment: .center, spacing: 12) {
+                    HStack(alignment: .center, spacing: 10) {
                         Text(race.series)
-                            .font(.system(size: 12, weight: .bold))
+                            .font(.system(size: 11, weight: .bold))
                             .foregroundColor(.white)
-                            .frame(width: 50, alignment: .center)
-                            .padding(.vertical, 4)
-                            .background(Color.red.opacity(0.8))
-                            .cornerRadius(4)
+                            .frame(width: 58, alignment: .center)
+                            .padding(.vertical, 5)
+                            .background(Color.red.opacity(0.9))
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
                         
-                        VStack(alignment: .leading, spacing: 2) {
+                        VStack(alignment: .leading, spacing: 3) {
                             Text(race.name)
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(.primary)
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundColor(.white)
                                 .lineLimit(1)
                                 .minimumScaleFactor(0.8)
+                            Text(race.location)
+                                .font(.system(size: 11))
+                                .foregroundColor(.gray)
+                                .lineLimit(1)
                         }
                         
                         Spacer(minLength: 4)
                         
                         Text(timeUntilRace(race.date))
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundColor(.secondary)
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.white.opacity(0.85))
                     }
                 }
             }
             Spacer(minLength: 0)
         }
-        .padding()
+        .padding(14)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
     
     // MARK: - Empty State
@@ -259,11 +270,15 @@ struct RaceWidgetEntryView: View {
         VStack(spacing: 8) {
             Image(systemName: "flag.checkered")
                 .font(.system(size: 30))
-                .foregroundColor(.secondary.opacity(0.5))
+                .foregroundColor(.gray.opacity(0.65))
             Text("No upcoming races")
                 .font(.system(size: 14, weight: .medium))
-                .foregroundColor(.secondary)
+                .foregroundColor(.gray)
+            Text("Add series from the app")
+                .font(.system(size: 11))
+                .foregroundColor(.gray.opacity(0.85))
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
@@ -274,16 +289,28 @@ struct RaceWidget: Widget {
         StaticConfiguration(kind: kind, provider: Provider()) { entry in
             if #available(iOS 17.0, *) {
                 RaceWidgetEntryView(entry: entry)
-                    .containerBackground(.fill.tertiary, for: .widget)
+                    .containerBackground(for: .widget) {
+                        LinearGradient(
+                            colors: [Color.black.opacity(0.96), Color(red: 0.08, green: 0.08, blue: 0.1)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    }
             } else {
                 RaceWidgetEntryView(entry: entry)
-                    .padding()
-                    .background()
+                    .background(
+                        LinearGradient(
+                            colors: [Color.black.opacity(0.96), Color(red: 0.08, green: 0.08, blue: 0.1)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
             }
         }
         .configurationDisplayName("Upcoming Races")
         .description("View your upcoming motorsports races at a glance")
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
+        .contentMarginsDisabled()
     }
 }
 
