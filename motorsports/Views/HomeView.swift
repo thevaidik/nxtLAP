@@ -201,7 +201,7 @@ struct HomeView: View {
             // Call to Action
             VStack(spacing: 16) {
                 Button(action: {
-                    selectedTab = .races
+                    selectedTab = .settings
                 }) {
                     HStack(spacing: 12) {
                         Image(systemName: "star.fill")

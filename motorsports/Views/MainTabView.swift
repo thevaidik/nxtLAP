@@ -8,7 +8,7 @@ struct MainTabView: View {
     @State private var selectedTab: Tab = .home
 
     enum Tab {
-        case home, watch, news, standings, races
+        case home, watch, news, standings, settings
     }
 
     var body: some View {
@@ -38,11 +38,11 @@ struct MainTabView: View {
                 }
                 .tag(Tab.standings)
 
-            AllRacesView()
+            SettingsView()
                 .tabItem {
-                    Label("Races", systemImage: "flag.fill")
+                    Label("Settings", systemImage: "gearshape.fill")
                 }
-                .tag(Tab.races)
+                .tag(Tab.settings)
 
         }
         .accentColor(.racingRed)
