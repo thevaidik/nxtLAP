@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 struct Livestream: Identifiable, Codable {
     let id: String
@@ -21,6 +22,23 @@ struct Livestream: Identifiable, Codable {
     enum CodingKeys: String, CodingKey {
         case id, title, channelId, channelTitle, thumbnailUrl, scheduledStartTime, actualStartTime, status, videoUrl
     }
+    
+    var startDate: Date? {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = formatter.date(from: scheduledStartTime) {
+            return date
+        }
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter.date(from: scheduledStartTime)
+    }
+    
+    var relativeTime: String {
+        guard let date = startDate else { return "" }
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .full
+        return formatter.localizedString(for: date, relativeTo: Date())
+    }
 }
 
 enum LivestreamStatus: String, Codable {
@@ -33,6 +51,22 @@ enum LivestreamStatus: String, Codable {
         case .live: return "LIVE"
         case .upcoming: return "UPCOMING"
         case .completed: return "COMPLETED"
+        }
+    }
+    
+    var buttonTitle: String {
+        switch self {
+        case .live: return "Watch Now"
+        case .upcoming: return "Watch"
+        case .completed: return "Watch"
+        }
+    }
+    
+    var statusColor: Color {
+        switch self {
+        case .live: return .red
+        case .upcoming: return .blue
+        case .completed: return .gray
         }
     }
 }
