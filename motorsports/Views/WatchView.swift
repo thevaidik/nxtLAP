@@ -236,26 +236,6 @@ struct LivestreamCard: View {
                         .overlay(ProgressView().tint(.white))
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                
-                // Status Badge
-                HStack(spacing: 4) {
-                    if stream.status == .live {
-                        Circle()
-                            .fill(.red)
-                            .frame(width: 8, height: 8)
-                            .shadow(color: .red, radius: 4)
-                    }
-                    Text(stream.status.displayName)
-                        .font(.caption2)
-                        .fontWeight(.bold)
-                }
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(
-                    BlurView(style: .systemUltraThinMaterialDark)
-                        .clipShape(Capsule())
-                )
-                .padding(10)
             }
             
             // Content Section
