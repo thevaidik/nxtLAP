@@ -39,7 +39,7 @@ enum RacingCategory: String, CaseIterable {
 }
 
 struct Race: Identifiable, Codable {
-    let id = UUID()
+    let id: String
     let name: String
     let series: String
     let date: Date
@@ -48,7 +48,9 @@ struct Race: Identifiable, Codable {
     let isStarred: Bool
     let hasExactTime: Bool
     
-    init(name: String, series: String, date: Date, location: String, circuit: String? = nil, isStarred: Bool = false, hasExactTime: Bool = true) {
+    init(id: String? = nil, name: String, series: String, date: Date, location: String, circuit: String? = nil, isStarred: Bool = false, hasExactTime: Bool = true) {
+        // Use provided id, or fallback to name+date if not available
+        self.id = id ?? "\(series)_\(name)_\(date.timeIntervalSince1970)"
         self.name = name
         self.series = series
         self.date = date
@@ -102,6 +104,7 @@ struct RacingServerEvent: Codable {
         let exactTime = !date.hasSuffix("T00:00:00Z")
         
         return Race(
+            id: id,
             name: event_name,
             series: seriesDisplayName,
             date: eventDate,

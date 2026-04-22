@@ -269,8 +269,7 @@ struct HomeView: View {
                     }
                 }
                 .pickerStyle(.segmented)
-                .padding(.horizontal, 20)
-                .padding(.bottom, 4)
+                .padding(.bottom, 12)
             }
             
             if !activeWeekGroups.isEmpty {
@@ -405,8 +404,10 @@ struct UpcomingWeekendCard: View {
 struct SessionRow: View {
     let race: Race
     var compact: Bool = false
+    @EnvironmentObject var notificationManager: NotificationManager
     
     private var sessionColor: Color {
+        // ... (keep logic)
         let name = race.name.uppercased()
         if name.contains("SPRINT") { return .orange }
         if name.contains("PRACTICE 1") || name.contains("FP1") { return .racingRed }

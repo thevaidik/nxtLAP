@@ -13,12 +13,14 @@ import WidgetKit
 class RacingDataService: ObservableObject {
     @Published var allSeries: [RacingSeries] = []
     @Published var starredSeries: Set<String> = [] // Using shortName as identifier
+    @Published var notificationsEnabledSeries: Set<String> = [] // Independent notification toggle
     @Published var upcomingRaces: [Race] = []
     @Published var isLoadingData = false
     @Published var apiConnectionStatus: String = "Not tested"
     
     private let apiService = RacingAPIService()
     private let starredSeriesKey = "starredRacingSeries"
+    private let notificationsEnabledKey = "notificationsEnabledSeries"
     
     // MARK: - Widget/App Group Sharing
     // TODO: Set this to your real App Group ID and enable it in BOTH the app target and the widget extension target entitlements
@@ -52,10 +54,23 @@ class RacingDataService: ObservableObject {
     }
     
     init() {
-        loadRacingSeries()
         loadStarredSeries()
+        loadNotificationPreferences()
+        loadRacingSeries()
         Task {
-            await loadRacingData()         }
+            await loadRacingData()
+        }
+    }
+    
+    private func loadNotificationPreferences() {
+        if let savedData = UserDefaults.standard.array(forKey: notificationsEnabledKey) as? [String] {
+            notificationsEnabledSeries = Set(savedData)
+        }
+    }
+    
+    private func saveNotificationPreferences() {
+        let array = Array(notificationsEnabledSeries)
+        UserDefaults.standard.set(array, forKey: notificationsEnabledKey)
     }
     
     private func loadStarredSeries() {
@@ -156,6 +171,10 @@ class RacingDataService: ObservableObject {
                     upcomingRaces = realRaces
                         .filter { Calendar.current.startOfDay(for: $0.date) >= today }
                         .sorted { $0.date < $1.date }
+                    
+                    // Automatically sync race notifications based on explicit preferences
+                    NotificationManager.shared.syncRaceNotifications(races: upcomingRaces, enabledSeries: notificationsEnabledSeries)
+                    
                     syncWidgetData()
                     // Log race breakdown by series
                     let racesBySeriesCount = Dictionary(grouping: upcomingRaces, by: { $0.series })
@@ -191,6 +210,12 @@ class RacingDataService: ObservableObject {
             print("❌ Removed \(seriesShortName) from starred series")
         } else {
             starredSeries.insert(seriesShortName)
+            // Enable notifications by default when starring
+            if !notificationsEnabledSeries.contains(seriesShortName) {
+                notificationsEnabledSeries.insert(seriesShortName)
+                saveNotificationPreferences()
+                NotificationManager.shared.syncRaceNotifications(races: upcomingRaces, enabledSeries: notificationsEnabledSeries)
+            }
             print("✅ Added \(seriesShortName) to starred series")
         }
         
@@ -202,6 +227,20 @@ class RacingDataService: ObservableObject {
     
     func isSeriesStarred(_ seriesShortName: String) -> Bool {
         starredSeries.contains(seriesShortName)
+    }
+    
+    func toggleNotificationsForSeries(_ seriesShortName: String) {
+        if notificationsEnabledSeries.contains(seriesShortName) {
+            notificationsEnabledSeries.remove(seriesShortName)
+        } else {
+            notificationsEnabledSeries.insert(seriesShortName)
+        }
+        saveNotificationPreferences()
+        NotificationManager.shared.syncRaceNotifications(races: upcomingRaces, enabledSeries: notificationsEnabledSeries)
+    }
+    
+    func areNotificationsEnabled(for seriesShortName: String) -> Bool {
+        notificationsEnabledSeries.contains(seriesShortName)
     }
     
     var starredSeriesList: [RacingSeries] {

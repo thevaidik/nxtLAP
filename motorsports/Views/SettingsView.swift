@@ -8,6 +8,7 @@ import SwiftUI
 struct SettingsView: View {
     @EnvironmentObject var dataService: RacingDataService
     @EnvironmentObject var livestreamViewModel: LivestreamViewModel
+    @EnvironmentObject var notificationManager: NotificationManager
     @State private var selectedTab: SettingsTab = .series
 
     enum SettingsTab: String, CaseIterable {
@@ -18,7 +19,7 @@ struct SettingsView: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
-                suggestionBox
+                headerActions
                 
                 // Segmented picker
                 Picker("Settings", selection: $selectedTab) {
@@ -48,56 +49,83 @@ struct SettingsView: View {
         .preferredColorScheme(.dark)
     }
 
-    // MARK: - Suggestion Box
-    private var suggestionBox: some View {
-        Button(action: {
-            if let url = URL(string: "mailto:founders@nxtlap.com?subject=App%20Feedback") {
-                UIApplication.shared.open(url)
-            }
-        }) {
-            HStack(spacing: 14) {
-                ZStack {
-                    Circle()
-                        .fill(LinearGradient(colors: [.yellow, .orange], startPoint: .topLeading, endPoint: .bottomTrailing).opacity(0.2))
-                        .frame(width: 36, height: 36)
-                    Image(systemName: "sparkles")
-                        .foregroundColor(.yellow)
-                        .font(.system(size: 16, weight: .bold))
+    // MARK: - Header Actions
+    private var headerActions: some View {
+        HStack(spacing: 12) {
+            // Suggest a Feature (Left)
+            Button(action: {
+                if let url = URL(string: "mailto:founders@nxtlap.com?subject=App%20Feedback") {
+                    UIApplication.shared.open(url)
                 }
-                
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("Suggest a Feature")
-                        .font(.subheadline)
-                        .fontWeight(.bold)
-                        .foregroundColor(.white)
+            }) {
+                VStack(alignment: .leading, spacing: 8) {
+                    ZStack {
+                        Circle()
+                            .fill(LinearGradient(colors: [.yellow, .orange], startPoint: .topLeading, endPoint: .bottomTrailing).opacity(0.15))
+                            .frame(width: 32, height: 32)
+                        Image(systemName: "sparkles")
+                            .foregroundColor(.yellow)
+                            .font(.system(size: 14, weight: .bold))
+                    }
                     
-                    Text("Or report a bug to our team")
-                        .font(.caption)
-                        .foregroundColor(.gray)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Suggest")
+                            .font(.subheadline)
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                        
+                        Text("Feature / Bug")
+                            .font(.caption2)
+                            .foregroundColor(.gray)
+                    }
                 }
-                
-                Spacer()
-                
-                Text("Send")
-                    .font(.caption)
-                    .fontWeight(.bold)
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(Color.racingRed)
-                    .clipShape(Capsule())
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(12)
+                .background(Color(white: 0.12))
+                .cornerRadius(16)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                )
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color(white: 0.12))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(LinearGradient(colors: [.white.opacity(0.2), .clear], startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1)
-                    )
-            )
-            .shadow(color: .black.opacity(0.2), radius: 5, x: 0, y: 2)
+            
+            // Widgets & Notifications (Right)
+            NavigationLink(destination: WidgetsAndNotificationsView()) {
+                VStack(alignment: .leading, spacing: 8) {
+                    ZStack {
+                        Circle()
+                            .fill(LinearGradient(colors: [.nxtlapRacingRed, .orange], startPoint: .topLeading, endPoint: .bottomTrailing).opacity(0.15))
+                            .frame(width: 32, height: 32)
+                        Image(systemName: "square.grid.2x2.fill")
+                            .foregroundColor(.nxtlapRacingRed)
+                            .font(.system(size: 14, weight: .bold))
+                            .overlay(
+                                Image(systemName: "bell.fill")
+                                    .font(.system(size: 8))
+                                    .offset(x: 8, y: -8)
+                            )
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Widgets & Alerts")
+                            .font(.subheadline)
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                        
+                        Text("Manage Everything")
+                            .font(.caption2)
+                            .foregroundColor(.gray)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(12)
+                .background(Color(white: 0.12))
+                .cornerRadius(16)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                )
+            }
         }
         .padding(.horizontal, 16)
         .padding(.top, 16)

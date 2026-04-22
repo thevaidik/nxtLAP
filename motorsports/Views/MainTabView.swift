@@ -47,6 +47,9 @@ struct MainTabView: View {
         }
         .accentColor(.racingRed)
         .preferredColorScheme(.dark)
+        .onChange(of: selectedTab) {
+            HapticManager.shared.selection()
+        }
     }
 }
 

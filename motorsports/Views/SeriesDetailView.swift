@@ -73,17 +73,36 @@ struct SeriesDetailView: View {
                             
                             Spacer()
                             
-                            Button(action: {
-                                withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
-                                    dataService.toggleStarredSeries(series.shortName)
+                            HStack(spacing: 10) {
+                                // Notifications Toggle
+                                Button(action: {
+                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                                        dataService.toggleNotificationsForSeries(series.shortName)
+                                        HapticManager.shared.trigger(.medium)
+                                    }
+                                }) {
+                                    Image(systemName: dataService.areNotificationsEnabled(for: series.shortName) ? "bell.fill" : "bell")
+                                        .font(.system(size: 13, weight: .semibold))
+                                        .foregroundColor(dataService.areNotificationsEnabled(for: series.shortName) ? .nxtlapRacingRed : .gray)
+                                        .padding(7)
+                                        .background(Color(.systemGray5))
+                                        .clipShape(Circle())
                                 }
-                            }) {
-                                Image(systemName: dataService.isSeriesStarred(series.shortName) ? "star.fill" : "star")
-                                    .font(.system(size: 13, weight: .semibold))
-                                    .foregroundColor(dataService.isSeriesStarred(series.shortName) ? .yellow : .gray)
-                                    .padding(7)
-                                    .background(Color(.systemGray5))
-                                    .clipShape(Circle())
+
+                                // Star Toggle
+                                Button(action: {
+                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                                        dataService.toggleStarredSeries(series.shortName)
+                                        HapticManager.shared.trigger(.light)
+                                    }
+                                }) {
+                                    Image(systemName: dataService.isSeriesStarred(series.shortName) ? "star.fill" : "star")
+                                        .font(.system(size: 13, weight: .semibold))
+                                        .foregroundColor(dataService.isSeriesStarred(series.shortName) ? .yellow : .gray)
+                                        .padding(7)
+                                        .background(Color(.systemGray5))
+                                        .clipShape(Circle())
+                                }
                             }
                         }
                         
@@ -254,6 +273,7 @@ struct SeriesDetailView: View {
 
 struct SeriesRaceRow: View {
     let race: Race
+    @EnvironmentObject var notificationManager: NotificationManager
     
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {

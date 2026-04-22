@@ -8,13 +8,22 @@
 import SwiftUI
 import AVFoundation
 
+class AppDelegate: NSObject, UIApplicationDelegate {
+    func application(_ application: UIApplication, supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {
+        return .portrait
+    }
+}
+
 @main
 struct motorsportsApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var racingDataService = RacingDataService()
     @StateObject private var livestreamViewModel = LivestreamViewModel()
+    @StateObject private var notificationManager = NotificationManager.shared
     
     init() {
         configureAudioSession()
+        NotificationManager.shared.requestPermission()
     }
     
     private func configureAudioSession() {
@@ -26,11 +35,19 @@ struct motorsportsApp: App {
         }
     }
     
+    @Environment(\.scenePhase) var scenePhase
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environmentObject(racingDataService)
                 .environmentObject(livestreamViewModel)
+                .environmentObject(notificationManager)
+                .onChange(of: scenePhase) {
+                    if scenePhase == .active {
+                        notificationManager.updateScheduledStatus()
+                    }
+                }
         }
     }
 }

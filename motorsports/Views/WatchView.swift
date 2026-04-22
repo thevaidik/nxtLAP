@@ -9,12 +9,12 @@ import SwiftUI
 
 struct WatchView: View {
     @EnvironmentObject var viewModel: LivestreamViewModel
-    @State private var selectedTab: WatchTab = .upcoming
+    @State private var selectedTab: WatchTab = .watch
     @State private var selectedStream: Livestream?
     
     enum WatchTab: String, CaseIterable {
+        case watch = "Watch"
         case upcoming = "Upcoming"
-        case past = "Past"
     }
     
     var body: some View {
@@ -35,8 +35,6 @@ struct WatchView: View {
                         }
                     }
                     .pickerStyle(.segmented)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 10)
                     .background(Color.black.opacity(0.8))
                 
                     if viewModel.isLoading && viewModel.streams.isEmpty {
@@ -103,7 +101,24 @@ struct WatchView: View {
                     } else {
                         ScrollView {
                             VStack(spacing: 24) {
-                                if selectedTab == .upcoming {
+                                if selectedTab == .watch {
+                                    if viewModel.pastStreams.isEmpty {
+                                        emptyStateView(title: "No Past Broadcasts", message: "Completed streams will appear here.")
+                                    } else {
+                                        // Past Broadcasts Section
+                                        VStack(alignment: .leading, spacing: 12) {
+                                            SectionHeader(title: "Past Broadcasts", icon: "clock.arrow.circlepath", color: .gray)
+                                            
+                                            LazyVStack(spacing: 16) {
+                                                ForEach(viewModel.pastStreams) { stream in
+                                                    LivestreamCard(stream: stream, isWatchTab: true) {
+                                                        selectedStream = stream
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                } else {
                                     if viewModel.liveStreams.isEmpty && viewModel.upcomingStreams.isEmpty {
                                         emptyStateView(title: "No Upcoming Events", message: "Check back later for live racing action.")
                                     } else {
@@ -134,29 +149,8 @@ struct WatchView: View {
                                                 LazyVStack(spacing: 16) {
                                                     ForEach(viewModel.upcomingStreams) { stream in
                                                         LivestreamCard(stream: stream) {
-                                                            // For upcoming, we still use Link as it might not be playable yet
-                                                            // but we can also handle it in the player if it's "ready"
-                                                            if let url = URL(string: stream.videoUrl) {
-                                                                UIApplication.shared.open(url)
-                                                            }
+                                                            // Logic handled in card
                                                         }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                } else {
-                                    if viewModel.pastStreams.isEmpty {
-                                        emptyStateView(title: "No Past Broadcasts", message: "Completed streams will appear here.")
-                                    } else {
-                                        // Past Broadcasts Section
-                                        VStack(alignment: .leading, spacing: 12) {
-                                            SectionHeader(title: "Past Broadcasts", icon: "clock.arrow.circlepath", color: .gray)
-                                            
-                                            LazyVStack(spacing: 16) {
-                                                ForEach(viewModel.pastStreams) { stream in
-                                                    LivestreamCard(stream: stream) {
-                                                        selectedStream = stream
                                                     }
                                                 }
                                             }
@@ -227,105 +221,196 @@ struct SectionHeader: View {
 
 struct LivestreamCard: View {
     let stream: Livestream
+    @EnvironmentObject var notificationManager: NotificationManager
+    var isWatchTab: Bool = false
     var onPlay: () -> Void
     
     var isPast: Bool {
-        stream.status == .completed
+        stream.status == .completed || isWatchTab
     }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Thumbnail Section
-            ZStack(alignment: .topTrailing) {
-                AsyncImage(url: URL(string: stream.thumbnailUrl)) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(16/9, contentMode: .fill)
-                        .grayscale(isPast ? 0.8 : 0.0) // Desaturate past events
-                        .opacity(isPast ? 0.6 : 1.0)
-                } placeholder: {
-                    Rectangle()
-                        .fill(Color(white: 0.1))
-                        .aspectRatio(16/9, contentMode: .fit)
-                        .overlay(ProgressView().tint(.white))
-                }
-                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-            }
-            
-            // Content Section
-            VStack(alignment: .leading, spacing: 8) {
-                Text(stream.title)
-                    .font(.headline)
-                    .foregroundColor(isPast ? .gray : .white)
-                    .lineLimit(2)
-                    .multilineTextAlignment(.leading)
-                
-                HStack {
-                    HStack(spacing: 4) {
-                        Image(systemName: "tv.fill")
-                            .font(.caption2)
-                        Text(stream.channelTitle)
-                            .font(.caption)
-                    }
-                    .foregroundColor(.gray)
-                    
-                    Spacer()
-                    
-                    if let date = stream.startDate {
-                        VStack(alignment: .trailing, spacing: 2) {
-                            HStack(spacing: 4) {
-                                Text(date, style: .date)
-                                Text("•")
-                                Text(date, style: .time)
-                            }
-                            .font(.system(size: 10, weight: .medium, design: .rounded))
-                            .foregroundColor(.gray)
-                            
-                            Text(stream.relativeTime)
-                                .font(.caption2)
-                                .fontWeight(.bold)
-                                .foregroundColor(isPast ? .gray : .nxtlapRacingRed)
-                        }
-                    }
-                }
-                
-                Button(action: onPlay) {
-                    HStack {
-                        Spacer()
-                        Image(systemName: isPast ? "play.rectangle.fill" : "play.fill")
-                        Text(stream.status.buttonTitle)
-                            .fontWeight(.bold)
-                        Spacer()
-                    }
-                    .padding(.vertical, 12)
-                    .background(
-                        isPast ? AnyShapeStyle(Color.white.opacity(0.1)) : 
-                        AnyShapeStyle(LinearGradient(
-                            colors: [.nxtlapRacingRed, .nxtlapRacingRed.opacity(0.8)],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        ))
-                    )
-                    .foregroundColor(isPast ? .gray : .white)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.white.opacity(isPast ? 0.1 : 0), lineWidth: 1)
-                    )
-                }
-                .padding(.top, 4)
-            }
-            .padding(16)
+            thumbnailSection
+            contentSection
         }
         .background(
             RoundedRectangle(cornerRadius: 20)
                 .fill(Color(white: 0.08))
                 .overlay(
                     RoundedRectangle(cornerRadius: 20)
-                        .stroke(Color.white.opacity(isPast ? 0.05 : 0.1), lineWidth: 1)
+                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
                 )
         )
         .shadow(color: .black.opacity(0.3), radius: 10, x: 0, y: 5)
+    }
+    
+    private var thumbnailSection: some View {
+        ZStack(alignment: .topTrailing) {
+            AsyncImage(url: URL(string: stream.thumbnailUrl)) { image in
+                image
+                    .resizable()
+                    .aspectRatio(16/9, contentMode: .fill)
+            } placeholder: {
+                Rectangle()
+                    .fill(Color(white: 0.1))
+                    .aspectRatio(16/9, contentMode: .fit)
+                    .overlay(ProgressView().tint(.white))
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            
+            if stream.status == .upcoming && !isWatchTab {
+                reminderToggle
+            }
+        }
+    }
+    
+    private var reminderToggle: some View {
+        Button(action: {
+            notificationManager.toggleLivestreamNotification(stream: stream)
+        }) {
+            ZStack {
+                Circle()
+                    .fill(.black.opacity(0.6))
+                    .blur(radius: 2)
+                
+                Image(systemName: notificationManager.isNotificationScheduled(id: stream.id) ? "bell.fill" : "bell")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(notificationManager.isNotificationScheduled(id: stream.id) ? .nxtlapRacingRed : .white)
+            }
+            .frame(width: 36, height: 36)
+            .background(
+                Circle()
+                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
+            )
+        }
+        .padding(12)
+    }
+    
+    private var contentSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(stream.title)
+                .font(.headline)
+                .foregroundColor(.white)
+                .lineLimit(2)
+                .multilineTextAlignment(.leading)
+            
+            infoRow
+            actionButton
+        }
+        .padding(16)
+    }
+    
+    private var infoRow: some View {
+        HStack {
+            HStack(spacing: 4) {
+                Image(systemName: "tv.fill")
+                    .font(.caption2)
+                Text(stream.channelTitle)
+                    .font(.caption)
+            }
+            .foregroundColor(.gray)
+            
+            Spacer()
+            
+            if let date = stream.startDate {
+                VStack(alignment: .trailing, spacing: 2) {
+                    HStack(spacing: 4) {
+                        Text(date, style: .date)
+                        Text("•")
+                        Text(date, style: .time)
+                    }
+                    .font(.system(size: 10, weight: .medium, design: .rounded))
+                    .foregroundColor(.gray)
+                    
+                    Text(stream.relativeTime)
+                        .font(.caption2)
+                        .fontWeight(.bold)
+                        .foregroundColor(isPast ? .gray : .nxtlapRacingRed)
+                }
+            }
+        }
+    }
+    
+    private var actionButton: some View {
+        Button(action: {
+            HapticManager.shared.trigger(.medium)
+            if stream.status == .upcoming && !isWatchTab {
+                notificationManager.toggleLivestreamNotification(stream: stream)
+            } else {
+                onPlay()
+            }
+        }) {
+            HStack(spacing: 8) {
+                Spacer()
+                buttonLabel
+                Spacer()
+            }
+            .padding(.vertical, 14)
+            .background { buttonBackground }
+            .foregroundColor(buttonForegroundColor)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .overlay(buttonBorder)
+            .shadow(color: buttonShadowColor, radius: 10, x: 0, y: 5)
+        }
+        .padding(.top, 4)
+    }
+    
+    @ViewBuilder
+    private var buttonLabel: some View {
+        if stream.status == .upcoming && !isWatchTab {
+            Image(systemName: notificationManager.isNotificationScheduled(id: stream.id) ? "bell.fill" : "bell")
+                .font(.system(size: 14, weight: .bold))
+            Text(notificationManager.isNotificationScheduled(id: stream.id) ? "Reminder Set" : "Set Reminder")
+                .font(.system(size: 15, weight: .bold, design: .rounded))
+        } else {
+            Image(systemName: (stream.status == .live && !isWatchTab) ? "dot.radiowaves.left.and.right" : "play.fill")
+                .font(.system(size: 14, weight: .bold))
+            Text((stream.status == .live && !isWatchTab) ? "Watch Now" : "Watch")
+                .font(.system(size: 15, weight: .bold, design: .rounded))
+                .tracking(0.5)
+        }
+    }
+    
+    @ViewBuilder
+    private var buttonBackground: some View {
+        if stream.status == .upcoming && !isWatchTab {
+            ZStack {
+                Color.blue.opacity(0.12)
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.blue.opacity(0.3), lineWidth: 1)
+            }
+        } else {
+            ZStack {
+                LinearGradient(
+                    colors: [
+                        Color(red: 0.95, green: 0.1, blue: 0.1),
+                        Color.nxtlapRacingRed,
+                        Color(red: 0.7, green: 0, blue: 0)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                LinearGradient(
+                    colors: [.white.opacity(0.15), .clear],
+                    startPoint: .top,
+                    endPoint: .center
+                )
+            }
+        }
+    }
+    
+    private var buttonForegroundColor: Color {
+        (stream.status == .upcoming && !isWatchTab) ? (notificationManager.isNotificationScheduled(id: stream.id) ? .nxtlapRacingRed : .blue) : .white
+    }
+    
+    private var buttonBorder: some View {
+        RoundedRectangle(cornerRadius: 12)
+            .stroke(Color.white.opacity(isWatchTab || stream.status != .upcoming ? 0.2 : 0), lineWidth: 0.5)
+    }
+    
+    private var buttonShadowColor: Color {
+        ((stream.status == .upcoming && !isWatchTab) ? Color.clear : Color.nxtlapRacingRed.opacity(0.4))
     }
 }
 
