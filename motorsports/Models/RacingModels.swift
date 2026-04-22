@@ -48,6 +48,13 @@ struct Race: Identifiable, Codable {
     let isStarred: Bool
     let hasExactTime: Bool
     
+    var isLive: Bool {
+        guard hasExactTime else { return false }
+        let now = Date()
+        let twoHours: TimeInterval = 2 * 60 * 60
+        return now >= date && now <= date.addingTimeInterval(twoHours)
+    }
+    
     init(id: String? = nil, name: String, series: String, date: Date, location: String, circuit: String? = nil, isStarred: Bool = false, hasExactTime: Bool = true) {
         // Use provided id, or fallback to name+date if not available
         self.id = id ?? "\(series)_\(name)_\(date.timeIntervalSince1970)"

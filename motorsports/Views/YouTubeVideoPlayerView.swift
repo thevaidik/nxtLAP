@@ -11,25 +11,11 @@ import YouTubePlayerKit
 struct YouTubeVideoPlayerView: View {
     let stream: Livestream
     @Environment(\.dismiss) private var dismiss
-    @State private var youTubePlayer: YouTubePlayer
+    @State private var youTubePlayer: YouTubePlayer?
+    @State private var isInitializing = true
     
     init(stream: Livestream) {
         self.stream = stream
-        // Initialize the player with the video URL and custom parameters
-        self._youTubePlayer = State(initialValue: YouTubePlayer(
-            source: .init(urlString: stream.videoUrl),
-            parameters: .init(
-                autoPlay: true,
-                showControls: true,
-                restrictRelatedVideosToSameChannel: true
-            ),
-            configuration: .init(
-                allowsInlineMediaPlayback: false, // Forces native iOS player takeover immediately
-                allowsAirPlayForMediaPlayback: true,
-                allowsPictureInPictureMediaPlayback: true,
-                customUserAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/604.1"
-            )
-        ))
     }
     
     var body: some View {
@@ -39,26 +25,20 @@ struct YouTubeVideoPlayerView: View {
                 
                 VStack(spacing: 0) {
                     // Player Area
-                    YouTubePlayerView(self.youTubePlayer) { state in
-                        switch state {
-                        case .idle:
-                            ProgressView()
-                                .tint(.white)
-                        case .ready:
-                            EmptyView()
-                        case .error(let error):
-                            VStack(spacing: 12) {
-                                Image(systemName: "exclamationmark.triangle.fill")
-                                    .font(.title)
-                                    .foregroundColor(.nxtlapRacingRed)
-                                Text("Failed to load video")
-                                    .font(.headline)
-                                Text(error.localizedDescription)
-                                    .font(.caption)
-                                    .foregroundColor(.gray)
-                                    .multilineTextAlignment(.center)
-                                    .padding(.horizontal)
+                    ZStack {
+                        if let player = youTubePlayer {
+                            YouTubePlayerView(player) { state in
+                                switch state {
+                                case .idle:
+                                    playerLoadingView
+                                case .ready:
+                                    EmptyView()
+                                case .error(let error):
+                                    playerErrorView(error)
+                                }
                             }
+                        } else {
+                            playerLoadingView
                         }
                     }
                     .aspectRatio(16/9, contentMode: .fit)
@@ -139,5 +119,69 @@ struct YouTubeVideoPlayerView: View {
         }
         .presentationDragIndicator(.visible)
         .preferredColorScheme(.dark)
+        .onAppear {
+            // Delay initialization slightly to allow modal animation to complete smoothly
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                self.youTubePlayer = YouTubePlayer(
+                    source: .init(urlString: stream.videoUrl),
+                    parameters: .init(
+                        autoPlay: true,
+                        showControls: true,
+                        restrictRelatedVideosToSameChannel: true
+                    ),
+                    configuration: .init(
+                        allowsInlineMediaPlayback: false,
+                        allowsAirPlayForMediaPlayback: true,
+                        allowsPictureInPictureMediaPlayback: true,
+                        customUserAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/604.1"
+                    )
+                )
+                self.isInitializing = false
+            }
+        }
+    }
+    
+    // MARK: - Subviews
+    
+    private var playerLoadingView: some View {
+        ZStack {
+            // Background Thumbnail (Blurred)
+            AsyncImage(url: URL(string: stream.thumbnailUrl)) { image in
+                image
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .blur(radius: 20)
+                    .overlay(Color.black.opacity(0.4))
+            } placeholder: {
+                Color.black
+            }
+            
+            VStack(spacing: 16) {
+                ProgressView()
+                    .tint(.white)
+                    .scaleEffect(1.2)
+                
+                Text("Preparing Stream...")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.white.opacity(0.8))
+                    .tracking(1)
+            }
+        }
+    }
+    
+    private func playerErrorView(_ error: YouTubePlayer.Error) -> some View {
+        VStack(spacing: 12) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.title)
+                .foregroundColor(.nxtlapRacingRed)
+            Text("Failed to load video")
+                .font(.headline)
+            Text(error.localizedDescription)
+                .font(.caption)
+                .foregroundColor(.gray)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+        }
     }
 }

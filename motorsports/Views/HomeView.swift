@@ -17,6 +17,7 @@ struct WeekendGroup: Identifiable {
 
 struct HomeView: View {
     @EnvironmentObject var dataService: RacingDataService
+    @EnvironmentObject var livestreamViewModel: LivestreamViewModel
     @Binding var selectedTab: MainTabView.Tab
     @StateObject private var newsViewModel = NewsViewModel()
     
@@ -118,6 +119,11 @@ struct HomeView: View {
                         NewsStoriesView(newsViewModel: newsViewModel)
                             .padding(.top, 16)
                             .padding(.bottom, 8)
+                        
+                        // Watch Now Carousel - suggests from Watch tab
+                        WatchNowCarouselView()
+                            .padding(.top, 8)
+                            .padding(.bottom, 16)
                     }
                     
                     // Main Content
@@ -148,6 +154,10 @@ struct HomeView: View {
         .task {
             if newsViewModel.articles.isEmpty {
                 await newsViewModel.fetchNews()
+            }
+            // Fetch livestreams to update "LIVE" badges in carousel
+            if livestreamViewModel.streams.isEmpty {
+                await livestreamViewModel.fetchLivestreams()
             }
         }
     }
@@ -472,6 +482,10 @@ struct SessionRow: View {
     }
     
     private func countdownText(for race: Race) -> String {
+        if race.isLive {
+            return "LIVE"
+        }
+        
         let calendar = Calendar.current
         let now = Date()
         let components = calendar.dateComponents([.day, .hour], from: now, to: race.date)
@@ -500,4 +514,5 @@ func seriesColor(for seriesName: String) -> Color {
     @Previewable @State var selectedTab: MainTabView.Tab = .home
     HomeView(selectedTab: $selectedTab)
         .environmentObject(RacingDataService())
+        .environmentObject(LivestreamViewModel())
 }
