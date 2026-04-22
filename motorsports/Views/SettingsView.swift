@@ -335,6 +335,31 @@ struct SeriesRow: View {
                     Spacer()
 
                     HStack(spacing: 8) {
+                        if dataService.isDevMode {
+                            let raceCount = dataService.getRacesForSeries(series.shortName).count
+                            if raceCount > 0 {
+                                Text("\(raceCount)")
+                                    .font(.system(size: 10, weight: .bold))
+                                    .foregroundColor(.black)
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(Color.green)
+                                    .clipShape(Capsule())
+                            } else {
+                                HStack(spacing: 3) {
+                                    Image(systemName: "exclamationmark.triangle.fill")
+                                        .font(.system(size: 8))
+                                    Text("No Data")
+                                        .font(.system(size: 8, weight: .bold))
+                                }
+                                .foregroundColor(.black)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color.green)
+                                .clipShape(Capsule())
+                            }
+                        }
+                        
                         Text("View")
                             .font(.caption2)
                             .foregroundColor(.gray)

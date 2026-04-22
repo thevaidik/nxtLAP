@@ -16,11 +16,13 @@ class RacingDataService: ObservableObject {
     @Published var notificationsEnabledSeries: Set<String> = [] // Independent notification toggle
     @Published var upcomingRaces: [Race] = []
     @Published var isLoadingData = false
+    @Published var isDevMode = false
     @Published var apiConnectionStatus: String = "Not tested"
     
     private let apiService = RacingAPIService()
     private let starredSeriesKey = "starredRacingSeries"
     private let notificationsEnabledKey = "notificationsEnabledSeries"
+    private let devModeKey = "isDevModeEnabled"
     
     // MARK: - Widget/App Group Sharing
     // TODO: Set this to your real App Group ID and enable it in BOTH the app target and the widget extension target entitlements
@@ -57,9 +59,20 @@ class RacingDataService: ObservableObject {
         loadStarredSeries()
         loadNotificationPreferences()
         loadRacingSeries()
+        loadDevMode()
         Task {
             await loadRacingData()
         }
+    }
+    
+    private func loadDevMode() {
+        isDevMode = UserDefaults.standard.bool(forKey: devModeKey)
+    }
+    
+    func toggleDevMode() {
+        isDevMode.toggle()
+        UserDefaults.standard.set(isDevMode, forKey: devModeKey)
+        HapticManager.shared.trigger(.medium)
     }
     
     private func loadNotificationPreferences() {

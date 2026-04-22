@@ -107,8 +107,6 @@ struct WatchView: View {
                                     } else {
                                         // Past Broadcasts Section
                                         VStack(alignment: .leading, spacing: 12) {
-                                            SectionHeader(title: "Past Broadcasts", icon: "clock.arrow.circlepath", color: .gray)
-                                            
                                             LazyVStack(spacing: 16) {
                                                 ForEach(viewModel.pastStreams) { stream in
                                                     LivestreamCard(stream: stream, isWatchTab: true) {

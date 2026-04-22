@@ -108,7 +108,10 @@ struct HomeView: View {
                         HStack {
                             Text("NxtLAP")
                                 .font(.system(size: 32, weight: .bold))
-                                .foregroundColor(.white)
+                                .foregroundColor(dataService.isDevMode ? .green : .white)
+                                .onTapGesture(count: 6) {
+                                    dataService.toggleDevMode()
+                                }
                             
                             Spacer()
                         }

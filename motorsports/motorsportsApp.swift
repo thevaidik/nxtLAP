@@ -23,6 +23,7 @@ struct motorsportsApp: App {
     
     init() {
         configureAudioSession()
+        HapticManager.shared.prepare()
         NotificationManager.shared.requestPermission()
     }
     
