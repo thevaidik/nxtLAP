@@ -2,7 +2,7 @@
 //  NewsService.swift
 //  motorsports
 //
-//  Created by Antigravity on 20/03/26.
+//  Created by Vaidik Dubey on 20/03/26.
 //
 
 import Foundation

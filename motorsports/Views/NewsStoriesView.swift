@@ -2,7 +2,7 @@
 //  NewsStoriesView.swift
 //  motorsports
 //
-//  Created by Cascade on 08/04/26.
+//  Created by Vaidik Dubey on 08/04/26.
 //
 
 import SwiftUI

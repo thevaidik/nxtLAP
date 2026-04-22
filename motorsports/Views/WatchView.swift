@@ -2,7 +2,7 @@
 //  WatchView.swift
 //  motorsports
 //
-//  Created by Antigravity on 10/04/26.
+//  Created by Vaidik Dubey on 10/04/26.
 //
 
 import SwiftUI
@@ -10,6 +10,7 @@ import SwiftUI
 struct WatchView: View {
     @EnvironmentObject var viewModel: LivestreamViewModel
     @State private var selectedTab: WatchTab = .upcoming
+    @State private var selectedStream: Livestream?
     
     enum WatchTab: String, CaseIterable {
         case upcoming = "Upcoming"
@@ -47,7 +48,6 @@ struct WatchView: View {
                         VStack(spacing: 16) {
                             Image(systemName: "exclamationmark.triangle.fill")
                                 .font(.system(size: 44))
-                                .foregroundColor(.nxtlapRacingRed)
                             Text("Unable to load streams")
                                 .font(.headline)
                             Text(error)
@@ -115,8 +115,10 @@ struct WatchView: View {
                                                 ScrollView(.horizontal, showsIndicators: false) {
                                                     HStack(spacing: 16) {
                                                         ForEach(viewModel.liveStreams) { stream in
-                                                            LivestreamCard(stream: stream)
-                                                                .frame(width: 320)
+                                                            LivestreamCard(stream: stream) {
+                                                                selectedStream = stream
+                                                            }
+                                                            .frame(width: 320)
                                                         }
                                                     }
                                                     .padding(.horizontal, 4)
@@ -131,7 +133,13 @@ struct WatchView: View {
                                                 
                                                 LazyVStack(spacing: 16) {
                                                     ForEach(viewModel.upcomingStreams) { stream in
-                                                        LivestreamCard(stream: stream)
+                                                        LivestreamCard(stream: stream) {
+                                                            // For upcoming, we still use Link as it might not be playable yet
+                                                            // but we can also handle it in the player if it's "ready"
+                                                            if let url = URL(string: stream.videoUrl) {
+                                                                UIApplication.shared.open(url)
+                                                            }
+                                                        }
                                                     }
                                                 }
                                             }
@@ -147,7 +155,9 @@ struct WatchView: View {
                                             
                                             LazyVStack(spacing: 16) {
                                                 ForEach(viewModel.pastStreams) { stream in
-                                                    LivestreamCard(stream: stream)
+                                                    LivestreamCard(stream: stream) {
+                                                        selectedStream = stream
+                                                    }
                                                 }
                                             }
                                         }
@@ -164,6 +174,9 @@ struct WatchView: View {
             }
             .navigationTitle("Watch")
             .navigationBarTitleDisplayMode(.inline)
+            .fullScreenCover(item: $selectedStream) { stream in
+                YouTubeVideoPlayerView(stream: stream)
+            }
             .task {
                 if viewModel.streams.isEmpty {
                     await viewModel.fetchLivestreams()
@@ -214,6 +227,7 @@ struct SectionHeader: View {
 
 struct LivestreamCard: View {
     let stream: Livestream
+    var onPlay: () -> Void
     
     var isPast: Bool {
         stream.status == .completed
@@ -275,7 +289,7 @@ struct LivestreamCard: View {
                     }
                 }
                 
-                Link(destination: URL(string: stream.videoUrl)!) {
+                Button(action: onPlay) {
                     HStack {
                         Spacer()
                         Image(systemName: isPast ? "play.rectangle.fill" : "play.fill")
