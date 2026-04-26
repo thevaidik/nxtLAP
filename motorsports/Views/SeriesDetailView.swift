@@ -93,7 +93,7 @@ struct SeriesDetailView: View {
                                 Button(action: {
                                     withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
                                         dataService.toggleStarredSeries(series.shortName)
-                                        HapticManager.shared.trigger(.light)
+                                        HapticManager.shared.trigger(.medium)
                                     }
                                 }) {
                                     Image(systemName: dataService.isSeriesStarred(series.shortName) ? "star.fill" : "star")

@@ -209,6 +209,7 @@ struct LivestreamCard: View {
             thumbnailSection
                 .onTapGesture {
                     if stream.effectiveStatus != .upcoming || isWatchTab {
+                        HapticManager.shared.racingImpact()
                         onPlay()
                     }
                 }
@@ -333,7 +334,7 @@ struct LivestreamCard: View {
     
     private var actionButton: some View {
         Button(action: {
-            HapticManager.shared.trigger(.medium)
+            HapticManager.shared.racingImpact()
             if stream.effectiveStatus == .upcoming && !isWatchTab {
                 notificationManager.toggleLivestreamNotification(stream: stream)
             } else {
