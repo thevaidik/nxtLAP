@@ -485,10 +485,6 @@ struct SessionRow: View {
     }
     
     private func countdownText(for race: Race) -> String {
-        if race.isLive {
-            return "LIVE"
-        }
-        
         let calendar = Calendar.current
         let now = Date()
         let components = calendar.dateComponents([.day, .hour], from: now, to: race.date)

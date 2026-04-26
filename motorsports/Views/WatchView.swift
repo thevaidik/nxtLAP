@@ -9,34 +9,25 @@ import SwiftUI
 
 struct WatchView: View {
     @EnvironmentObject var viewModel: LivestreamViewModel
+    @EnvironmentObject var dataService: RacingDataService
     @State private var selectedTab: WatchTab = .watch
     @State private var selectedStream: Livestream?
     
-    enum WatchTab: String, CaseIterable {
+    enum WatchTab: String, CaseIterable, Identifiable {
         case watch = "Watch"
         case upcoming = "Upcoming"
+        
+        var id: String { rawValue }
     }
     
     var body: some View {
         NavigationStack {
-            ZStack {
-                // Background Gradient
-                LinearGradient(
-                    colors: [Color.black, Color(white: 0.06)],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .ignoresSafeArea()
+            ZStack(alignment: .top) {
+                // Background
+                Color.black.ignoresSafeArea()
                 
+                // Content Layer
                 VStack(spacing: 0) {
-                    Picker("Watch", selection: $selectedTab) {
-                        ForEach(WatchTab.allCases, id: \.self) { tab in
-                            Text(tab.rawValue).tag(tab)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .background(Color.black.opacity(0.8))
-                
                     if viewModel.isLoading && viewModel.streams.isEmpty {
                         Spacer()
                         ProgressView()
@@ -99,55 +90,76 @@ struct WatchView: View {
                             .padding(.top, 10)
                         }
                     } else {
-                        ScrollView {
-                            VStack(spacing: 24) {
-                                if selectedTab == .watch {
-                                    if viewModel.pastStreams.isEmpty {
-                                        emptyStateView(title: "No Past Broadcasts", message: "Completed streams will appear here.")
-                                    } else {
-                                        // Past Broadcasts Section
-                                        VStack(alignment: .leading, spacing: 12) {
-                                            LazyVStack(spacing: 16) {
-                                                ForEach(viewModel.pastStreams) { stream in
-                                                    LivestreamCard(stream: stream, isWatchTab: true) {
-                                                        selectedStream = stream
-                                                    }
-                                                }
+                    ScrollView {
+                        VStack(spacing: 24) {
+                            if selectedTab == .watch {
+                                if viewModel.pastStreams.isEmpty {
+                                    emptyStateView(title: "No Past Broadcasts", message: "Completed streams will appear here.")
+                                        .padding(.top, 160)
+                                } else {
+                                    LazyVStack(spacing: 16) {
+                                        ForEach(viewModel.pastStreams) { stream in
+                                            LivestreamCard(stream: stream, isWatchTab: true) {
+                                                selectedStream = stream
                                             }
                                         }
                                     }
+                                }
+                            } else {
+                                if viewModel.upcomingStreams.isEmpty {
+                                    emptyStateView(title: "No Upcoming Events", message: "Check back later for live racing action.")
+                                        .padding(.top, 160)
                                 } else {
-                                    if viewModel.upcomingStreams.isEmpty {
-                                        emptyStateView(title: "No Upcoming Events", message: "Check back later for live racing action.")
-                                    } else {
-                                        
-                                        // Upcoming Events Section
-                                        if !viewModel.upcomingStreams.isEmpty {
-                                            VStack(alignment: .leading, spacing: 12) {
-                                                SectionHeader(title: "Upcoming", icon: "calendar", color: .blue)
-                                                
-                                                LazyVStack(spacing: 16) {
-                                                    ForEach(viewModel.upcomingStreams) { stream in
-                                                        LivestreamCard(stream: stream) {
-                                                            // Logic handled in card
-                                                        }
-                                                    }
-                                                }
+                                    VStack(alignment: .leading, spacing: 12) {
+                                        SectionHeader(title: "Upcoming", icon: "calendar", color: .blue)
+                                        LazyVStack(spacing: 16) {
+                                            ForEach(viewModel.upcomingStreams) { stream in
+                                                LivestreamCard(stream: stream) { }
                                             }
                                         }
                                     }
                                 }
                             }
-                            .padding(16)
                         }
-                        .refreshable {
-                            await viewModel.fetchLivestreams()
-                        }
+                        .padding(.horizontal, 16)
+                        .padding(.top, 140) // Space for sticky header
+                        .padding(.bottom, 20)
+                    }
+                    .refreshable {
+                        await viewModel.fetchLivestreams()
+                    }
                     }
                 }
+                
+                // Sticky Header with NxtLAP Logo and Picker
+                VStack(spacing: 0) {
+                    // Logo
+                    HStack {
+                        Text("NxtLAP")
+                            .font(.system(size: 32, weight: .bold))
+                            .foregroundColor(dataService.isDevMode ? .green : .white)
+                            .onTapGesture(count: 6) {
+                                dataService.toggleDevMode()
+                            }
+                        Spacer()
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 10)
+                    .padding(.bottom, 12)
+                    
+                    // Segmented Picker
+                    Picker("Watch", selection: $selectedTab) {
+                        ForEach(WatchTab.allCases) { tab in
+                            Text(tab.rawValue).tag(tab)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 15)
+                }
+                .background(.ultraThinMaterial)
+                .background(Color.black.opacity(0.4))
             }
-            .navigationTitle("Watch")
-            .navigationBarTitleDisplayMode(.inline)
             .fullScreenCover(item: $selectedStream) { stream in
                 YouTubeVideoPlayerView(stream: stream)
             }
@@ -212,13 +224,18 @@ struct LivestreamCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             thumbnailSection
+                .onTapGesture {
+                    if stream.effectiveStatus != .upcoming || isWatchTab {
+                        onPlay()
+                    }
+                }
             contentSection
         }
         .background(
-            RoundedRectangle(cornerRadius: 20)
+            RoundedRectangle(cornerRadius: 16)
                 .fill(Color(white: 0.08))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 20)
+                    RoundedRectangle(cornerRadius: 16)
                         .stroke(Color.white.opacity(0.1), lineWidth: 1)
                 )
         )
@@ -226,7 +243,7 @@ struct LivestreamCard: View {
     }
     
     private var thumbnailSection: some View {
-        ZStack(alignment: .topTrailing) {
+        ZStack(alignment: .center) {
             AsyncImage(url: URL(string: stream.thumbnailUrl)) { image in
                 image
                     .resizable()
@@ -237,9 +254,25 @@ struct LivestreamCard: View {
                     .aspectRatio(16/9, contentMode: .fit)
                     .overlay(ProgressView().tint(.white))
             }
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .frame(height: 160)
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             
-            if stream.effectiveStatus == .upcoming && !isWatchTab {
+            // Play Button Overlay
+            if stream.effectiveStatus != .upcoming || isWatchTab {
+                ZStack {
+                    Circle()
+                        .fill(.black.opacity(0.4))
+                        .frame(width: 50, height: 50)
+                        .blur(radius: 1)
+                    
+                    Image(systemName: "play.fill")
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundColor(.white)
+                        .offset(x: 2)
+                }
+                .background(Circle().stroke(Color.white.opacity(0.3), lineWidth: 2))
+            } else {
+                // Reminder Bell for upcoming
                 reminderToggle
             }
         }
@@ -268,17 +301,20 @@ struct LivestreamCard: View {
     }
     
     private var contentSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 6) {
             Text(stream.title)
-                .font(.headline)
+                .font(.system(size: 16, weight: .bold))
                 .foregroundColor(.white)
                 .lineLimit(2)
-                .multilineTextAlignment(.leading)
             
             infoRow
-            actionButton
+            
+            if stream.effectiveStatus == .upcoming && !isWatchTab {
+                actionButton
+                    .padding(.top, 4)
+            }
         }
-        .padding(16)
+        .padding(12)
     }
     
     private var infoRow: some View {
@@ -357,40 +393,43 @@ struct LivestreamCard: View {
         if stream.effectiveStatus == .upcoming && !isWatchTab {
             ZStack {
                 Color.blue.opacity(0.12)
-                RoundedRectangle(cornerRadius: 12)
+                RoundedRectangle(cornerRadius: 10)
                     .stroke(Color.blue.opacity(0.3), lineWidth: 1)
             }
         } else {
             ZStack {
-                LinearGradient(
-                    colors: [
-                        Color(red: 0.95, green: 0.1, blue: 0.1),
-                        Color.nxtlapRacingRed,
-                        Color(red: 0.7, green: 0, blue: 0)
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
+                // Solid, vibrant premium red
+                Color.nxtlapRacingRed
+                
+                // Subtle glossy overlay for depth (not transparent blur)
                 LinearGradient(
                     colors: [.white.opacity(0.15), .clear],
                     startPoint: .top,
-                    endPoint: .center
+                    endPoint: .bottom
                 )
+                
+                if !isWatchTab {
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                }
             }
         }
     }
     
     private var buttonForegroundColor: Color {
-        (stream.effectiveStatus == .upcoming && !isWatchTab) ? (notificationManager.isNotificationScheduled(id: stream.id) ? .nxtlapRacingRed : .blue) : .white
+        if stream.effectiveStatus == .upcoming && !isWatchTab {
+            return notificationManager.isNotificationScheduled(id: stream.id) ? .nxtlapRacingRed : .blue
+        }
+        return .white
     }
     
     private var buttonBorder: some View {
-        RoundedRectangle(cornerRadius: 12)
-            .stroke(Color.white.opacity(isWatchTab || stream.effectiveStatus != .upcoming ? 0.2 : 0), lineWidth: 0.5)
+        RoundedRectangle(cornerRadius: 10)
+            .stroke(Color.white.opacity(0.1), lineWidth: 0.5)
     }
     
     private var buttonShadowColor: Color {
-        ((stream.effectiveStatus == .upcoming && !isWatchTab) ? Color.clear : Color.nxtlapRacingRed.opacity(0.4))
+        Color.clear // Removed aggressive shadow
     }
 }
 
