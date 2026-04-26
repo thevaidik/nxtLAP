@@ -51,8 +51,8 @@ struct Race: Identifiable, Codable {
     var isLive: Bool {
         guard hasExactTime else { return false }
         let now = Date()
-        let twoHours: TimeInterval = 2 * 60 * 60
-        return now >= date && now <= date.addingTimeInterval(twoHours)
+        let sixHours: TimeInterval = 6 * 60 * 60
+        return now >= date && now <= date.addingTimeInterval(sixHours)
     }
     
     init(id: String? = nil, name: String, series: String, date: Date, location: String, circuit: String? = nil, isStarred: Bool = false, hasExactTime: Bool = true) {

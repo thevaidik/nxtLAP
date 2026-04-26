@@ -41,29 +41,17 @@ class LivestreamViewModel: ObservableObject {
     private var now: Date { Date() }
     
     var liveStreams: [Livestream] {
-        filteredStreams.filter { $0.status == .live }
+        [] // No longer using a separate Live section in the UI
     }
     
     var upcomingStreams: [Livestream] {
-        filteredStreams.filter { 
-            guard $0.status == .upcoming else { return false }
-            if let startDate = $0.startDate {
-                return startDate > now
-            }
-            return true
-        }
-        .sorted { ($0.scheduledStartTime) < ($1.scheduledStartTime) }
+        filteredStreams.filter { $0.effectiveStatus == .upcoming }
+            .sorted { ($0.scheduledStartTime) < ($1.scheduledStartTime) }
     }
     
     var pastStreams: [Livestream] {
-        filteredStreams.filter { 
-            if $0.status == .completed { return true }
-            if $0.status == .upcoming, let startDate = $0.startDate {
-                return startDate <= now
-            }
-            return false
-        }
-        .sorted { ($0.scheduledStartTime) > ($1.scheduledStartTime) }
+        filteredStreams.filter { $0.effectiveStatus != .upcoming }
+            .sorted { $0.scheduledStartTime > $1.scheduledStartTime }
     }
     
     func fetchLivestreams() async {

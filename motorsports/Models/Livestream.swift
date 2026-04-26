@@ -39,6 +39,17 @@ struct Livestream: Identifiable, Codable {
         formatter.unitsStyle = .full
         return formatter.localizedString(for: date, relativeTo: Date())
     }
+    
+    /// Time-based status derived purely from device clock.
+    /// YouTube's `status` field lags behind; we know the schedule.
+    /// - Upcoming:  startDate > now
+    /// - Live:      now >= startDate && now <= startDate + 4 hours
+    /// - Completed: now > startDate + 4 hours  (or server says completed)
+    var effectiveStatus: LivestreamStatus {
+        if status == .completed { return .completed }
+        guard let start = startDate else { return status }
+        return Date() < start ? .upcoming : .live
+    }
 }
 
 enum LivestreamStatus: String, Codable {

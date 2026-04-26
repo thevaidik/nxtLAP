@@ -117,27 +117,9 @@ struct WatchView: View {
                                         }
                                     }
                                 } else {
-                                    if viewModel.liveStreams.isEmpty && viewModel.upcomingStreams.isEmpty {
+                                    if viewModel.upcomingStreams.isEmpty {
                                         emptyStateView(title: "No Upcoming Events", message: "Check back later for live racing action.")
                                     } else {
-                                        // Live Now Section
-                                        if !viewModel.liveStreams.isEmpty {
-                                            VStack(alignment: .leading, spacing: 12) {
-                                                SectionHeader(title: "Live Now", icon: "dot.radiowaves.left.and.right", color: .red)
-                                                
-                                                ScrollView(.horizontal, showsIndicators: false) {
-                                                    HStack(spacing: 16) {
-                                                        ForEach(viewModel.liveStreams) { stream in
-                                                            LivestreamCard(stream: stream) {
-                                                                selectedStream = stream
-                                                            }
-                                                            .frame(width: 320)
-                                                        }
-                                                    }
-                                                    .padding(.horizontal, 4)
-                                                }
-                                            }
-                                        }
                                         
                                         // Upcoming Events Section
                                         if !viewModel.upcomingStreams.isEmpty {
@@ -257,7 +239,7 @@ struct LivestreamCard: View {
             }
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             
-            if stream.status == .upcoming && !isWatchTab {
+            if stream.effectiveStatus == .upcoming && !isWatchTab {
                 reminderToggle
             }
         }
@@ -333,7 +315,7 @@ struct LivestreamCard: View {
     private var actionButton: some View {
         Button(action: {
             HapticManager.shared.trigger(.medium)
-            if stream.status == .upcoming && !isWatchTab {
+            if stream.effectiveStatus == .upcoming && !isWatchTab {
                 notificationManager.toggleLivestreamNotification(stream: stream)
             } else {
                 onPlay()
@@ -356,15 +338,15 @@ struct LivestreamCard: View {
     
     @ViewBuilder
     private var buttonLabel: some View {
-        if stream.status == .upcoming && !isWatchTab {
+        if stream.effectiveStatus == .upcoming && !isWatchTab {
             Image(systemName: notificationManager.isNotificationScheduled(id: stream.id) ? "bell.fill" : "bell")
                 .font(.system(size: 14, weight: .bold))
             Text(notificationManager.isNotificationScheduled(id: stream.id) ? "Reminder Set" : "Set Reminder")
                 .font(.system(size: 15, weight: .bold, design: .rounded))
         } else {
-            Image(systemName: (stream.status == .live && !isWatchTab) ? "dot.radiowaves.left.and.right" : "play.fill")
+            Image(systemName: (stream.effectiveStatus == .live && !isWatchTab) ? "dot.radiowaves.left.and.right" : "play.fill")
                 .font(.system(size: 14, weight: .bold))
-            Text((stream.status == .live && !isWatchTab) ? "Watch Now" : "Watch")
+            Text((stream.effectiveStatus == .live && !isWatchTab) ? "Watch Now" : "Watch")
                 .font(.system(size: 15, weight: .bold, design: .rounded))
                 .tracking(0.5)
         }
@@ -372,7 +354,7 @@ struct LivestreamCard: View {
     
     @ViewBuilder
     private var buttonBackground: some View {
-        if stream.status == .upcoming && !isWatchTab {
+        if stream.effectiveStatus == .upcoming && !isWatchTab {
             ZStack {
                 Color.blue.opacity(0.12)
                 RoundedRectangle(cornerRadius: 12)
@@ -399,16 +381,16 @@ struct LivestreamCard: View {
     }
     
     private var buttonForegroundColor: Color {
-        (stream.status == .upcoming && !isWatchTab) ? (notificationManager.isNotificationScheduled(id: stream.id) ? .nxtlapRacingRed : .blue) : .white
+        (stream.effectiveStatus == .upcoming && !isWatchTab) ? (notificationManager.isNotificationScheduled(id: stream.id) ? .nxtlapRacingRed : .blue) : .white
     }
     
     private var buttonBorder: some View {
         RoundedRectangle(cornerRadius: 12)
-            .stroke(Color.white.opacity(isWatchTab || stream.status != .upcoming ? 0.2 : 0), lineWidth: 0.5)
+            .stroke(Color.white.opacity(isWatchTab || stream.effectiveStatus != .upcoming ? 0.2 : 0), lineWidth: 0.5)
     }
     
     private var buttonShadowColor: Color {
-        ((stream.status == .upcoming && !isWatchTab) ? Color.clear : Color.nxtlapRacingRed.opacity(0.4))
+        ((stream.effectiveStatus == .upcoming && !isWatchTab) ? Color.clear : Color.nxtlapRacingRed.opacity(0.4))
     }
 }
 

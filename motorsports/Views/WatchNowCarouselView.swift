@@ -9,7 +9,6 @@ import SwiftUI
 
 struct WatchNowCarouselView: View {
     @EnvironmentObject var viewModel: LivestreamViewModel
-    @EnvironmentObject var dataService: RacingDataService
     @State private var selectedStream: Livestream?
     
     var body: some View {
@@ -46,7 +45,7 @@ struct WatchNowCarouselView: View {
                                 selectedStream = stream
                                 HapticManager.shared.trigger(.medium)
                             }) {
-                                WatchSuggestionCard(stream: stream, isLive: isStreamLive(stream))
+                                WatchSuggestionCard(stream: stream)
                             }
                         }
                     }
@@ -66,52 +65,12 @@ struct WatchNowCarouselView: View {
     }
     
     private var displayStreams: [Livestream] {
-        let liveRaces = dataService.upcomingRaces.filter { $0.isLive }
-        let liveSeriesNames = Set(liveRaces.map { $0.series.lowercased() })
-        
-        // Streams that are live according to backend
-        let liveByBackend = viewModel.liveStreams
-        
-        // Streams that match a live race according to schedule
-        let liveBySchedule = viewModel.streams.filter { stream in
-            if stream.status == .completed { return false } // Don't mark completed as live
-            let title = stream.title.lowercased()
-            let channel = stream.channelTitle.lowercased()
-            return liveSeriesNames.contains { series in
-                title.contains(series) || channel.contains(series)
-            }
-        }
-        
-        var combinedLive = liveByBackend
-        for stream in liveBySchedule {
-            if !combinedLive.contains(where: { $0.id == stream.id }) {
-                combinedLive.append(stream)
-            }
-        }
-        
-        let past = viewModel.pastStreams.filter { s in !combinedLive.contains(where: { $0.id == s.id }) }.prefix(5)
-        return combinedLive + Array(past)
-    }
-    
-    private func isStreamLive(_ stream: Livestream) -> Bool {
-        if stream.status == .live { return true }
-        if stream.status == .completed { return false }
-        
-        // Check schedule
-        let liveRaces = dataService.upcomingRaces.filter { $0.isLive }
-        let liveSeriesNames = Set(liveRaces.map { $0.series.lowercased() })
-        let title = stream.title.lowercased()
-        let channel = stream.channelTitle.lowercased()
-        
-        return liveSeriesNames.contains { series in
-            title.contains(series) || channel.contains(series)
-        }
+        Array(viewModel.pastStreams.prefix(10))
     }
 }
 
 struct WatchSuggestionCard: View {
     let stream: Livestream
-    let isLive: Bool
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -127,24 +86,8 @@ struct WatchSuggestionCard: View {
                 .frame(width: 200, height: 110)
                 .clipped()
                 
-                // Status Badge
-                HStack {
-                    if isLive {
-                        HStack(spacing: 4) {
-                            Circle()
-                                .fill(.red)
-                                .frame(width: 6, height: 6)
-                            Text("LIVE")
-                                .font(.system(size: 10, weight: .black))
-                        }
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 3)
-                        .background(.black.opacity(0.75))
-                        .cornerRadius(4)
-                        .padding(8)
-                    }
-                    Spacer()
-                }
+                .frame(width: 200, height: 110)
+                .clipped()
             }
             
             // Text Content
@@ -168,7 +111,7 @@ struct WatchSuggestionCard: View {
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .overlay(
             RoundedRectangle(cornerRadius: 16)
-                .stroke(isLive ? Color.red.opacity(0.4) : Color.white.opacity(0.1), lineWidth: 1)
+                .stroke(Color.white.opacity(0.1), lineWidth: 1)
         )
     }
 }
@@ -176,6 +119,5 @@ struct WatchSuggestionCard: View {
 #Preview {
     WatchNowCarouselView()
         .environmentObject(LivestreamViewModel())
-        .environmentObject(RacingDataService())
         .background(Color.black)
 }
