@@ -7,18 +7,18 @@
 
 import SwiftUI
 
+enum WatchTab: String, CaseIterable, Identifiable {
+    case watch = "Watch"
+    case upcoming = "Upcoming"
+    
+    var id: String { rawValue }
+}
+
 struct WatchView: View {
     @EnvironmentObject var viewModel: LivestreamViewModel
     @EnvironmentObject var dataService: RacingDataService
     @State private var selectedTab: WatchTab = .watch
     @State private var selectedStream: Livestream?
-    
-    enum WatchTab: String, CaseIterable, Identifiable {
-        case watch = "Watch"
-        case upcoming = "Upcoming"
-        
-        var id: String { rawValue }
-    }
     
     var body: some View {
         NavigationStack {
@@ -26,110 +26,17 @@ struct WatchView: View {
                 // Background
                 Color.black.ignoresSafeArea()
                 
-                // Content Layer
-                VStack(spacing: 0) {
-                    if viewModel.isLoading && viewModel.streams.isEmpty {
-                        Spacer()
-                        ProgressView()
-                            .tint(.nxtlapRacingRed)
-                        Spacer()
-                    } else if let error = viewModel.errorMessage {
-                        VStack(spacing: 16) {
-                            Image(systemName: "exclamationmark.triangle.fill")
-                                .font(.system(size: 44))
-                            Text("Unable to load streams")
-                                .font(.headline)
-                            Text(error)
-                                .font(.subheadline)
-                                .foregroundColor(.gray)
-                                .multilineTextAlignment(.center)
-                            Button("Retry") {
-                                Task {
-                                    await viewModel.fetchLivestreams()
-                                }
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .tint(.nxtlapRacingRed)
-                        }
-                        .padding()
-                    } else if viewModel.streams.isEmpty {
-                        VStack(spacing: 20) {
-                            Image(systemName: "play.rectangle.on.rectangle.fill")
-                                .font(.system(size: 60))
-                                .foregroundColor(.gray.opacity(0.3))
-                            Text("No Livestreams Available")
-                                .font(.title3)
-                                .fontWeight(.bold)
-                            Text("Check back later for live racing action.")
-                                .font(.subheadline)
-                                .foregroundColor(.gray)
-                        }
-                    } else if viewModel.filteredStreams.isEmpty {
-                        VStack(spacing: 20) {
-                            Image(systemName: "eye.slash.fill")
-                                .font(.system(size: 60))
-                                .foregroundColor(.gray.opacity(0.3))
-                            Text("No Streams Selected")
-                                .font(.title3)
-                                .fontWeight(.bold)
-                            Text("Manage your visible livestreams in the 'Settings' tab under 'Livestreams'.")
-                                .font(.subheadline)
-                                .foregroundColor(.gray)
-                                .multilineTextAlignment(.center)
-                                .padding(.horizontal, 40)
-                            
-                            NavigationLink(destination: SettingsView()) {
-                                Text("Go to Settings")
-                                    .fontWeight(.semibold)
-                                    .foregroundColor(.white)
-                                    .padding(.horizontal, 24)
-                                    .padding(.vertical, 12)
-                                    .background(Color.nxtlapRacingRed)
-                                    .clipShape(Capsule())
-                            }
-                            .padding(.top, 10)
-                        }
-                    } else {
-                    ScrollView {
-                        VStack(spacing: 24) {
-                            if selectedTab == .watch {
-                                if viewModel.pastStreams.isEmpty {
-                                    emptyStateView(title: "No Past Broadcasts", message: "Completed streams will appear here.")
-                                        .padding(.top, 160)
-                                } else {
-                                    LazyVStack(spacing: 16) {
-                                        ForEach(viewModel.pastStreams) { stream in
-                                            LivestreamCard(stream: stream, isWatchTab: true) {
-                                                selectedStream = stream
-                                            }
-                                        }
-                                    }
-                                }
-                            } else {
-                                if viewModel.upcomingStreams.isEmpty {
-                                    emptyStateView(title: "No Upcoming Events", message: "Check back later for live racing action.")
-                                        .padding(.top, 160)
-                                } else {
-                                    VStack(alignment: .leading, spacing: 12) {
-                                        SectionHeader(title: "Upcoming", icon: "calendar", color: .blue)
-                                        LazyVStack(spacing: 16) {
-                                            ForEach(viewModel.upcomingStreams) { stream in
-                                                LivestreamCard(stream: stream) { }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.top, 140) // Space for sticky header
-                        .padding(.bottom, 20)
-                    }
-                    .refreshable {
-                        await viewModel.fetchLivestreams()
-                    }
-                    }
+                // Content Layer (Paging)
+                TabView(selection: $selectedTab) {
+                    contentList(for: .watch)
+                        .tag(WatchTab.watch)
+                    
+                    contentList(for: .upcoming)
+                        .tag(WatchTab.upcoming)
                 }
+                .tabViewStyle(.page(indexDisplayMode: .never))
+                .ignoresSafeArea(edges: .bottom)
+                .background(Color.black) // Ensure it's hit-testable
                 
                 // Sticky Header with NxtLAP Logo and Picker
                 VStack(spacing: 0) {
@@ -170,6 +77,82 @@ struct WatchView: View {
             }
         }
         .preferredColorScheme(.dark)
+    }
+    
+    @ViewBuilder
+    private func contentList(for tab: WatchTab) -> some View {
+        if viewModel.isLoading && viewModel.streams.isEmpty {
+            VStack {
+                Spacer()
+                ProgressView()
+                    .tint(.nxtlapRacingRed)
+                Spacer()
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if let error = viewModel.errorMessage {
+            VStack(spacing: 16) {
+                Spacer()
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 44))
+                Text("Unable to load streams")
+                    .font(.headline)
+                Text(error)
+                    .font(.subheadline)
+                    .foregroundColor(.gray)
+                    .multilineTextAlignment(.center)
+                Button("Retry") {
+                    Task { await viewModel.fetchLivestreams() }
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.nxtlapRacingRed)
+                Spacer()
+            }
+            .padding()
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else {
+            ScrollView {
+                VStack(spacing: 24) {
+                    if tab == .watch {
+                        if viewModel.pastStreams.isEmpty {
+                            emptyStateView(title: "No Past Broadcasts", message: "Completed streams will appear here.")
+                                .padding(.top, 160)
+                        } else {
+                            LazyVStack(spacing: 16) {
+                                ForEach(viewModel.pastStreams) { stream in
+                                    LivestreamCard(stream: stream, isWatchTab: true) {
+                                        selectedStream = stream
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        if viewModel.upcomingStreams.isEmpty {
+                            emptyStateView(title: "No Upcoming Events", message: "Check back later for live racing action.")
+                                .padding(.top, 160)
+                        } else {
+                            VStack(alignment: .leading, spacing: 12) {
+                                SectionHeader(title: "Upcoming", icon: "calendar", color: .blue)
+                                LazyVStack(spacing: 16) {
+                                    ForEach(viewModel.upcomingStreams) { stream in
+                                        LivestreamCard(stream: stream) {
+                                            if stream.effectiveStatus == .live {
+                                                selectedStream = stream
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 150) // Space for sticky header
+                .padding(.bottom, 30)
+            }
+            .refreshable {
+                await viewModel.fetchLivestreams()
+            }
+        }
     }
     
     @ViewBuilder
