@@ -19,6 +19,7 @@ struct motorsportsApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var racingDataService = RacingDataService()
     @StateObject private var livestreamViewModel = LivestreamViewModel()
+    @StateObject private var newsViewModel = NewsViewModel()
     @StateObject private var notificationManager = NotificationManager.shared
     
     init() {
@@ -43,6 +44,7 @@ struct motorsportsApp: App {
             ContentView()
                 .environmentObject(racingDataService)
                 .environmentObject(livestreamViewModel)
+                .environmentObject(newsViewModel)
                 .environmentObject(notificationManager)
                 .onChange(of: scenePhase) {
                     if scenePhase == .active {

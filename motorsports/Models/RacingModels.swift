@@ -14,7 +14,7 @@ struct RacingSeries: Identifiable, Hashable {
     let category: RacingCategory
     let description: String
     let iconName: String
-    let officialWebsite: String
+    let officialWebsite: String?
     let aboutText: String
 }
 
@@ -34,6 +34,19 @@ enum RacingCategory: String, CaseIterable {
         case .rally: return "purple"
         case .oval: return "red"
         case .motorcycle: return "yellow"
+        }
+    }
+    
+    // Helper to map server categories
+    static func from(serverCategory: String) -> RacingCategory {
+        switch serverCategory.lowercased() {
+        case "open wheel": return .formula
+        case "sports car": return .endurance
+        case "touring car": return .touring
+        case "rally": return .rally
+        case "stock car": return .oval
+        case "two-wheel": return .motorcycle
+        default: return .touring // Fallback
         }
     }
 }
@@ -85,6 +98,8 @@ enum SessionType: String, CaseIterable {
 
 // MARK: - Racing Server API Models
 struct RacingServerEvent: Codable {
+    static var dynamicSlugToShortName: [String: String] = [:]
+    
     let id: String
     let series: String
     let event_name: String
@@ -105,8 +120,8 @@ struct RacingServerEvent: Codable {
             return nil
         }
         
-        // Map series slug to display name
-        let seriesDisplayName = mapSeriesToDisplayName(series)
+        // Map series slug to display name dynamically
+        let seriesDisplayName = RacingServerEvent.dynamicSlugToShortName[series] ?? series.uppercased()
         
         let exactTime = !date.hasSuffix("T00:00:00Z")
         
@@ -121,21 +136,14 @@ struct RacingServerEvent: Codable {
             hasExactTime: exactTime
         )
     }
-    
-    private func mapSeriesToDisplayName(_ slug: String) -> String {
-        switch slug {
-        case "formula1": return "F1"
-        case "motogp": return "MOTO GP"
-        case "indycar": return "INDYCAR"
-        case "wrc": return "WRC"
-        case "imsa": return "IMSA"
-        case "supergt": return "SGT"
-        case "britishgt": return "BGT"
-        case "btcc": return "BTCC"
-        case "v8supercars": return "V8SC"
-        default: return slug.uppercased()
-        }
-    }
+}
+
+struct RacingServerSeries: Codable {
+    let id: String
+    let name: String
+    let short_name: String
+    let category: String
+    let description: String
 }
 
 // MARK: - F1 Standings Models

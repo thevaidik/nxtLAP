@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct NewsView: View {
-    @StateObject private var viewModel = NewsViewModel()
+    @EnvironmentObject var viewModel: NewsViewModel
     @State private var currentIndex = 0
     
     var body: some View {

@@ -114,32 +114,10 @@ struct StoryCircle: View {
                         )
                         .frame(width: 72, height: 72)
                     
-                    // Inner circle with article image or fallback
                     if let imageUrl = firstArticleImageUrl, let url = URL(string: imageUrl) {
-                        AsyncImage(url: url) { phase in
-                            switch phase {
-                            case .empty:
-                                Circle()
-                                    .fill(Color(white: 0.12))
-                            case .success(let image):
-                                image
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                                    .clipShape(Circle())
-                            case .failure:
-                                Circle()
-                                    .fill(Color(white: 0.12))
-                                    .overlay(
-                                        Text(initial)
-                                            .font(.system(size: 28, weight: .bold))
-                                            .foregroundColor(Color("RacingRed"))
-                                    )
-                            @unknown default:
-                                Circle()
-                                    .fill(Color(white: 0.12))
-                            }
-                        }
-                        .frame(width: 64, height: 64)
+                        DownsamplingAsyncImage(url: url, targetSize: CGSize(width: 64, height: 64))
+                            .frame(width: 64, height: 64)
+                            .clipShape(Circle())
                     } else {
                         Circle()
                             .fill(Color(white: 0.12))
@@ -210,7 +188,6 @@ struct StoryViewerView: View {
     
     @State private var currentIndex = 0
     @State private var progress: CGFloat = 0
-    @State private var timer: Timer?
     
     private let storyDuration: TimeInterval = 5.0
     
@@ -389,51 +366,42 @@ struct StoryViewerView: View {
                         }
                     }
             )
+            .task(id: currentIndex) {
+                // Reset progress when index changes
+                progress = 0
+                
+                // Modern async/await loop
+                while !Task.isCancelled {
+                    try? await Task.sleep(nanoseconds: 50_000_000) // 0.05 seconds
+                    
+                    await MainActor.run {
+                        withAnimation(.linear(duration: 0.05)) {
+                            progress += 0.05 / storyDuration
+                        }
+                        
+                        if progress >= 1.0 {
+                            goToNext()
+                        }
+                    }
+                }
+            }
             .onAppear {
                 currentIndex = 0
-                progress = 0
-                startTimer()
-            }
-            .onDisappear {
-                stopTimer()
             }
         }
-    }
-    
-    private func startTimer() {
-        progress = 0
-        timer?.invalidate()
-        timer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { _ in
-            withAnimation(.linear(duration: 0.05)) {
-                progress += 0.05 / storyDuration
-            }
-            
-            if progress >= 1.0 {
-                goToNext()
-            }
-        }
-    }
-    
-    private func stopTimer() {
-        timer?.invalidate()
-        timer = nil
     }
     
     private func goToNext() {
-        stopTimer()
         if currentIndex < articles.count - 1 {
             currentIndex += 1
-            startTimer()
         } else {
             isPresented = false
         }
     }
     
     private func goToPrevious() {
-        stopTimer()
         if currentIndex > 0 {
             currentIndex -= 1
-            startTimer()
         }
     }
 }    

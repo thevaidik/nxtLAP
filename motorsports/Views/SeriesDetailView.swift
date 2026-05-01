@@ -159,40 +159,42 @@ struct SeriesDetailView: View {
                         )
                 )
                 
-                // Official Website
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Official Website")
-                        .font(.headline)
-                        .fontWeight(.semibold)
-                    
-                    Link(destination: URL(string: series.officialWebsite)!) {
-                        HStack {
-                            Image(systemName: "globe")
-                                .font(.subheadline)
-                                .foregroundColor(.racingRed)
-                            Text(series.officialWebsite)
-                                .font(.callout)
-                                .foregroundColor(.racingRed)
-                                .lineLimit(1)
-                            Spacer()
-                            Image(systemName: "arrow.up.right")
-                                .font(.caption)
-                                .foregroundColor(.racingRed)
+                // Official Website (Optional)
+                if let websiteUrl = series.officialWebsite, !websiteUrl.isEmpty, let url = URL(string: websiteUrl) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Official Website")
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                        
+                        Link(destination: url) {
+                            HStack {
+                                Image(systemName: "globe")
+                                    .font(.subheadline)
+                                    .foregroundColor(.racingRed)
+                                Text(websiteUrl)
+                                    .font(.callout)
+                                    .foregroundColor(.racingRed)
+                                    .lineLimit(1)
+                                Spacer()
+                                Image(systemName: "arrow.up.right")
+                                    .font(.caption)
+                                    .foregroundColor(.racingRed)
+                            }
+                            .padding(10)
+                            .background(Color(.systemGray5))
+                            .cornerRadius(8)
                         }
-                        .padding(10)
-                        .background(Color(.systemGray5))
-                        .cornerRadius(8)
                     }
+                    .padding(14)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(Color(.systemGray6))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .stroke(Color.white.opacity(0.06), lineWidth: 1)
+                            )
+                    )
                 }
-                .padding(14)
-                .background(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(Color(.systemGray6))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .stroke(Color.white.opacity(0.06), lineWidth: 1)
-                        )
-                )
                 
                 // About Section (always expanded)
                 VStack(alignment: .leading, spacing: 6) {

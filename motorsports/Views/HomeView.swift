@@ -19,7 +19,7 @@ struct HomeView: View {
     @EnvironmentObject var dataService: RacingDataService
     @EnvironmentObject var livestreamViewModel: LivestreamViewModel
     @Binding var selectedTab: MainTabView.Tab
-    @StateObject private var newsViewModel = NewsViewModel()
+    @EnvironmentObject var newsViewModel: NewsViewModel
     
     private enum HomeWeekSegment: String, CaseIterable {
         case thisWeek = "This week"
