@@ -123,13 +123,13 @@ struct SeriesDetailView: View {
                 )
                 
                 // Upcoming Sessions (next 1 month)
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Upcoming Sessions")
-                        .font(.headline)
-                        .fontWeight(.semibold)
-                        .padding(.horizontal, 14)
-                    
-                    if upcomingMonthRaces.isEmpty {
+                if upcomingMonthRaces.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Upcoming Sessions")
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                            .padding(.horizontal, 14)
+                        
                         VStack(spacing: 8) {
                             Image(systemName: "calendar.badge.exclamationmark")
                                 .font(.system(size: 24))
@@ -140,24 +140,48 @@ struct SeriesDetailView: View {
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 24)
-                    } else {
-                        LazyVStack(spacing: 6) {
-                            ForEach(upcomingMonthRaces) { race in
-                                SeriesRaceRow(race: race)
+                    }
+                    .padding(.vertical, 12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(Color(.systemGray6))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .stroke(Color.white.opacity(0.06), lineWidth: 1)
+                            )
+                    )
+                } else {
+                    let chunks = upcomingMonthRaces.chunked(into: 12)
+                    ForEach(Array(chunks.enumerated()), id: \.offset) { index, chunk in
+                        VStack(alignment: .leading, spacing: 8) {
+                            if index == 0 {
+                                Text("Upcoming Sessions")
+                                    .font(.headline)
+                                    .fontWeight(.semibold)
+                                    .padding(.horizontal, 14)
                             }
+                            
+                            TabView {
+                                ForEach(chunk) { race in
+                                    SeriesRaceCard(race: race, series: series)
+                                        .padding(.horizontal, 14)
+                                        .padding(.bottom, 44) // Space for dots
+                                }
+                            }
+                            .tabViewStyle(.page(indexDisplayMode: .always))
+                            .frame(height: 310)
                         }
-                        .padding(.horizontal, 14)
+                        .padding(.vertical, 12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .fill(Color(.systemGray6))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                        .stroke(Color.white.opacity(0.06), lineWidth: 1)
+                                )
+                        )
                     }
                 }
-                .padding(.vertical, 12)
-                .background(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(Color(.systemGray6))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .stroke(Color.white.opacity(0.06), lineWidth: 1)
-                        )
-                )
                 
                 // Official Website (Optional)
                 if let websiteUrl = series.officialWebsite, !websiteUrl.isEmpty, let url = URL(string: websiteUrl) {
@@ -218,13 +242,13 @@ struct SeriesDetailView: View {
                 )
                 
                 // Other Sessions (all remaining)
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Other Sessions")
-                        .font(.headline)
-                        .fontWeight(.semibold)
-                        .padding(.horizontal, 14)
-                    
-                    if otherSessionRaces.isEmpty {
+                if otherSessionRaces.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Other Sessions")
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                            .padding(.horizontal, 14)
+                        
                         VStack(spacing: 8) {
                             Image(systemName: "calendar")
                                 .font(.system(size: 24))
@@ -235,24 +259,48 @@ struct SeriesDetailView: View {
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 24)
-                    } else {
-                        LazyVStack(spacing: 6) {
-                            ForEach(otherSessionRaces) { race in
-                                SeriesRaceRow(race: race)
+                    }
+                    .padding(.vertical, 12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(Color(.systemGray6))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .stroke(Color.white.opacity(0.06), lineWidth: 1)
+                            )
+                    )
+                } else {
+                    let chunks = otherSessionRaces.chunked(into: 12)
+                    ForEach(Array(chunks.enumerated()), id: \.offset) { index, chunk in
+                        VStack(alignment: .leading, spacing: 8) {
+                            if index == 0 {
+                                Text("Other Sessions")
+                                    .font(.headline)
+                                    .fontWeight(.semibold)
+                                    .padding(.horizontal, 14)
                             }
+                            
+                            TabView {
+                                ForEach(chunk) { race in
+                                    SeriesRaceCard(race: race, series: series)
+                                        .padding(.horizontal, 14)
+                                        .padding(.bottom, 44) // Space for dots
+                                }
+                            }
+                            .tabViewStyle(.page(indexDisplayMode: .always))
+                            .frame(height: 310)
                         }
-                        .padding(.horizontal, 14)
+                        .padding(.vertical, 12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .fill(Color(.systemGray6))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                        .stroke(Color.white.opacity(0.06), lineWidth: 1)
+                                )
+                        )
                     }
                 }
-                .padding(.vertical, 12)
-                .background(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(Color(.systemGray6))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .stroke(Color.white.opacity(0.06), lineWidth: 1)
-                        )
-                )
             }
             .padding(12)
         }
@@ -270,6 +318,97 @@ struct SeriesDetailView: View {
         .navigationTitle(series.shortName)
         .navigationBarTitleDisplayMode(.inline)
         .preferredColorScheme(.dark)
+    }
+}
+
+struct SeriesRaceCard: View {
+    let race: Race
+    let series: RacingSeries
+    @EnvironmentObject var notificationManager: NotificationManager
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // Thumbnail with Play Button Overlay
+            ZStack {
+                // Placeholder background with series color/gradient
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(
+                        LinearGradient(
+                            gradient: Gradient(colors: [Color.nxtlapRacingRed.opacity(0.8), Color.orange.opacity(0.6)]),
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .aspectRatio(16/9, contentMode: .fit)
+                
+                // Series Icon or Name as placeholder
+                VStack(spacing: 4) {
+                    Image(systemName: "flag.checkered")
+                        .font(.system(size: 24))
+                        .foregroundColor(.white.opacity(0.4))
+                    Text(series.shortName)
+                        .font(.caption2)
+                        .fontWeight(.black)
+                        .foregroundColor(.white.opacity(0.4))
+                }
+                
+                // Play Button UI (from WatchView)
+                ZStack {
+                    Circle()
+                        .fill(.black.opacity(0.4))
+                        .frame(width: 50, height: 50)
+                        .blur(radius: 1)
+                    
+                    Image(systemName: "play.fill")
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundColor(.white)
+                        .offset(x: 2)
+                }
+                .background(Circle().stroke(Color.white.opacity(0.3), lineWidth: 2))
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            
+            // Content Section
+            VStack(alignment: .leading, spacing: 6) {
+                Text(race.name)
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(.white)
+                    .lineLimit(2)
+                
+                HStack(spacing: 4) {
+                    Image(systemName: "mappin.and.ellipse")
+                        .font(.caption2)
+                    Text(race.location)
+                        .font(.caption)
+                }
+                .foregroundColor(.gray)
+                .lineLimit(1)
+                
+                Text(formattedDate(race))
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .foregroundColor(.nxtlapRacingRed)
+            }
+            .padding(10)
+        }
+        .background(Color(white: 0.12))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color.white.opacity(0.1), lineWidth: 1)
+        )
+    }
+    
+    private func formattedDate(_ race: Race) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d"
+        var s = formatter.string(from: race.date)
+        if race.hasExactTime {
+            let timeFormatter = DateFormatter()
+            timeFormatter.timeStyle = .short
+            s += " • " + timeFormatter.string(from: race.date)
+        }
+        return s
     }
 }
 

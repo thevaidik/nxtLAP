@@ -38,19 +38,20 @@ struct WatchNowCarouselView: View {
                     .padding(.horizontal, 20)
                 }
             } else if !displayStreams.isEmpty {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 14) {
-                        ForEach(displayStreams) { stream in
-                            Button(action: {
-                                selectedStream = stream
-                                HapticManager.shared.trigger(.medium)
-                            }) {
-                                WatchSuggestionCard(stream: stream)
-                            }
+                TabView {
+                    ForEach(displayStreams) { stream in
+                        Button(action: {
+                            selectedStream = stream
+                            HapticManager.shared.trigger(.medium)
+                        }) {
+                            WatchSuggestionCard(stream: stream)
                         }
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 44) // Space for dots
                     }
-                    .padding(.horizontal, 20)
                 }
+                .tabViewStyle(.page(indexDisplayMode: .always))
+                .frame(height: 220) // Keep it small (110 image + ~50 text + dots)
             } else {
                 // Empty state if no streams at all
                 Text("No recent broadcasts available")
@@ -83,10 +84,8 @@ struct WatchSuggestionCard: View {
                 } placeholder: {
                     Color(white: 0.1)
                 }
-                .frame(width: 200, height: 110)
-                .clipped()
-                
-                .frame(width: 200, height: 110)
+                .frame(height: 110)
+                .frame(maxWidth: .infinity)
                 .clipped()
             }
             
@@ -105,7 +104,7 @@ struct WatchSuggestionCard: View {
                     .lineLimit(1)
             }
             .padding(10)
-            .frame(width: 200)
+            .frame(maxWidth: .infinity, alignment: .leading)
             .background(Color(white: 0.12))
         }
         .clipShape(RoundedRectangle(cornerRadius: 16))

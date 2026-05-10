@@ -117,11 +117,21 @@ struct WatchView: View {
                             emptyStateView(title: "No Past Broadcasts", message: "Completed streams will appear here.")
                                 .padding(.top, 160)
                         } else {
-                            LazyVStack(spacing: 16) {
-                                ForEach(viewModel.pastStreams) { stream in
-                                    LivestreamCard(stream: stream, isWatchTab: true) {
-                                        selectedStream = stream
+                            let chunks = viewModel.pastStreams.chunked(into: 12)
+                            ForEach(Array(chunks.enumerated()), id: \.offset) { index, chunk in
+                                VStack(alignment: .leading, spacing: 12) {
+                                    TabView {
+                                        ForEach(chunk) { stream in
+                                            LivestreamCard(stream: stream, isWatchTab: true) {
+                                                selectedStream = stream
+                                            }
+                                            .padding(.horizontal, 16)
+                                            .padding(.bottom, 44) // Space for dots
+                                        }
                                     }
+                                    .tabViewStyle(.page(indexDisplayMode: .always))
+                                    .frame(height: 360)
+                                    .padding(.horizontal, -16) // Negate outer horizontal padding so dots can center
                                 }
                             }
                         }
@@ -130,16 +140,26 @@ struct WatchView: View {
                             emptyStateView(title: "No Upcoming Events", message: "Check back later for live racing action.")
                                 .padding(.top, 160)
                         } else {
-                            VStack(alignment: .leading, spacing: 12) {
-                                SectionHeader(title: "Upcoming", icon: "calendar", color: .blue)
-                                LazyVStack(spacing: 16) {
-                                    ForEach(viewModel.upcomingStreams) { stream in
-                                        LivestreamCard(stream: stream) {
-                                            if stream.effectiveStatus == .live {
-                                                selectedStream = stream
+                            let chunks = viewModel.upcomingStreams.chunked(into: 12)
+                            ForEach(Array(chunks.enumerated()), id: \.offset) { index, chunk in
+                                VStack(alignment: .leading, spacing: 12) {
+                                    if index == 0 {
+                                        SectionHeader(title: "Upcoming", icon: "calendar", color: .blue)
+                                    }
+                                    TabView {
+                                        ForEach(chunk) { stream in
+                                            LivestreamCard(stream: stream) {
+                                                if stream.effectiveStatus == .live {
+                                                    selectedStream = stream
+                                                }
                                             }
+                                            .padding(.horizontal, 16)
+                                            .padding(.bottom, 44) // Space for dots
                                         }
                                     }
+                                    .tabViewStyle(.page(indexDisplayMode: .always))
+                                    .frame(height: 420) // Taller because of action button
+                                    .padding(.horizontal, -16)
                                 }
                             }
                         }
@@ -225,7 +245,6 @@ struct LivestreamCard: View {
         )
         .shadow(color: .black.opacity(0.3), radius: 10, x: 0, y: 5)
     }
-    
     private var thumbnailSection: some View {
         ZStack(alignment: .center) {
             AsyncImage(url: URL(string: stream.thumbnailUrl)) { image in
@@ -238,7 +257,7 @@ struct LivestreamCard: View {
                     .aspectRatio(16/9, contentMode: .fit)
                     .overlay(ProgressView().tint(.white))
             }
-            .frame(height: 160)
+            .frame(height: 180)
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             
             // Play Button Overlay
