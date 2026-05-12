@@ -17,14 +17,9 @@ struct StandingsView: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
-                Picker("Standings", selection: $selectedTab) {
-                    ForEach(StandingsTab.allCases, id: \.self) { tab in
-                        Text(tab.rawValue).tag(tab)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 10)
+                CustomSegmentedControl(selection: $selectedTab, options: StandingsTab.allCases)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
 
                 if viewModel.isLoading {
                     Spacer()

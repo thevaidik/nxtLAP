@@ -46,6 +46,7 @@ struct motorsportsApp: App {
                 .environmentObject(livestreamViewModel)
                 .environmentObject(newsViewModel)
                 .environmentObject(notificationManager)
+                .fontWidth(Font.Width(0.1))
                 .onChange(of: scenePhase) {
                     if scenePhase == .active {
                         notificationManager.updateScheduledStatus()

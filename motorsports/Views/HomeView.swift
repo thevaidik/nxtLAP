@@ -276,13 +276,9 @@ struct HomeView: View {
             }
             
             if !upcomingWeekendGroups.isEmpty && (!thisWeekGroups.isEmpty || !nextWeekGroups.isEmpty) {
-                Picker("Week", selection: $weekSegment) {
-                    ForEach(HomeWeekSegment.allCases, id: \.self) { segment in
-                        Text(segment.rawValue).tag(segment)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .padding(.bottom, 12)
+                CustomSegmentedControl(selection: $weekSegment, options: HomeWeekSegment.allCases)
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 12)
             }
             
             if !activeWeekGroups.isEmpty {
@@ -435,10 +431,6 @@ struct SessionRow: View {
     
     var body: some View {
         HStack(alignment: .top, spacing: compact ? 8 : 12) {
-            RoundedRectangle(cornerRadius: 2)
-                .fill(sessionColor)
-                .frame(width: compact ? 2 : 3)
-            
             VStack(alignment: .leading, spacing: compact ? 4 : 6) {
                 HStack(alignment: .firstTextBaseline) {
                     Text(race.name)

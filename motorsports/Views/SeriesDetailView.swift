@@ -123,13 +123,13 @@ struct SeriesDetailView: View {
                 )
                 
                 // Upcoming Sessions (next 1 month)
-                if upcomingMonthRaces.isEmpty {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Upcoming Sessions")
-                            .font(.headline)
-                            .fontWeight(.semibold)
-                            .padding(.horizontal, 14)
-                        
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Upcoming Sessions")
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .padding(.horizontal, 14)
+                    
+                    if upcomingMonthRaces.isEmpty {
                         VStack(spacing: 8) {
                             Image(systemName: "calendar.badge.exclamationmark")
                                 .font(.system(size: 24))
@@ -140,48 +140,24 @@ struct SeriesDetailView: View {
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 24)
-                    }
-                    .padding(.vertical, 12)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .fill(Color(.systemGray6))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                    .stroke(Color.white.opacity(0.06), lineWidth: 1)
-                            )
-                    )
-                } else {
-                    let chunks = upcomingMonthRaces.chunked(into: 12)
-                    ForEach(Array(chunks.enumerated()), id: \.offset) { index, chunk in
-                        VStack(alignment: .leading, spacing: 8) {
-                            if index == 0 {
-                                Text("Upcoming Sessions")
-                                    .font(.headline)
-                                    .fontWeight(.semibold)
-                                    .padding(.horizontal, 14)
+                    } else {
+                        LazyVStack(spacing: 12) {
+                            ForEach(upcomingMonthRaces) { race in
+                                SeriesRaceCard(race: race, series: series)
                             }
-                            
-                            TabView {
-                                ForEach(chunk) { race in
-                                    SeriesRaceCard(race: race, series: series)
-                                        .padding(.horizontal, 14)
-                                        .padding(.bottom, 44) // Space for dots
-                                }
-                            }
-                            .tabViewStyle(.page(indexDisplayMode: .always))
-                            .frame(height: 310)
                         }
-                        .padding(.vertical, 12)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .fill(Color(.systemGray6))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                        .stroke(Color.white.opacity(0.06), lineWidth: 1)
-                                )
-                        )
+                        .padding(.horizontal, 14)
                     }
                 }
+                .padding(.vertical, 12)
+                .background(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(Color(.systemGray6))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .stroke(Color.white.opacity(0.06), lineWidth: 1)
+                        )
+                )
                 
                 // Official Website (Optional)
                 if let websiteUrl = series.officialWebsite, !websiteUrl.isEmpty, let url = URL(string: websiteUrl) {
@@ -242,13 +218,13 @@ struct SeriesDetailView: View {
                 )
                 
                 // Other Sessions (all remaining)
-                if otherSessionRaces.isEmpty {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Other Sessions")
-                            .font(.headline)
-                            .fontWeight(.semibold)
-                            .padding(.horizontal, 14)
-                        
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Other Sessions")
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .padding(.horizontal, 14)
+                    
+                    if otherSessionRaces.isEmpty {
                         VStack(spacing: 8) {
                             Image(systemName: "calendar")
                                 .font(.system(size: 24))
@@ -259,48 +235,24 @@ struct SeriesDetailView: View {
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 24)
-                    }
-                    .padding(.vertical, 12)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .fill(Color(.systemGray6))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                    .stroke(Color.white.opacity(0.06), lineWidth: 1)
-                            )
-                    )
-                } else {
-                    let chunks = otherSessionRaces.chunked(into: 12)
-                    ForEach(Array(chunks.enumerated()), id: \.offset) { index, chunk in
-                        VStack(alignment: .leading, spacing: 8) {
-                            if index == 0 {
-                                Text("Other Sessions")
-                                    .font(.headline)
-                                    .fontWeight(.semibold)
-                                    .padding(.horizontal, 14)
+                    } else {
+                        LazyVStack(spacing: 12) {
+                            ForEach(otherSessionRaces) { race in
+                                SeriesRaceCard(race: race, series: series)
                             }
-                            
-                            TabView {
-                                ForEach(chunk) { race in
-                                    SeriesRaceCard(race: race, series: series)
-                                        .padding(.horizontal, 14)
-                                        .padding(.bottom, 44) // Space for dots
-                                }
-                            }
-                            .tabViewStyle(.page(indexDisplayMode: .always))
-                            .frame(height: 310)
                         }
-                        .padding(.vertical, 12)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .fill(Color(.systemGray6))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                        .stroke(Color.white.opacity(0.06), lineWidth: 1)
-                                )
-                        )
+                        .padding(.horizontal, 14)
                     }
                 }
+                .padding(.vertical, 12)
+                .background(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(Color(.systemGray6))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .stroke(Color.white.opacity(0.06), lineWidth: 1)
+                        )
+                )
             }
             .padding(12)
         }
@@ -326,54 +278,36 @@ struct SeriesRaceCard: View {
     let series: RacingSeries
     @EnvironmentObject var notificationManager: NotificationManager
     
+    private var sessionColor: Color {
+        let name = race.name.uppercased()
+        if name.contains("SPRINT") { return .orange }
+        if name.contains("PRACTICE 1") || name.contains("FP1") { return .racingRed }
+        if name.contains("PRACTICE 2") || name.contains("FP2") { return .purple }
+        if name.contains("PRACTICE 3") || name.contains("FP3") { return .blue }
+        if name.contains("QUALIFYING") || name.contains("QUALI") { return .green }
+        
+        let colors: [Color] = [.racingRed, .blue, .green, .orange, .purple, .pink, .cyan, .mint, .indigo, .teal]
+        let index = abs(race.name.hashValue) % colors.count
+        return colors[index]
+    }
+    
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            // Thumbnail with Play Button Overlay
-            ZStack {
-                // Placeholder background with series color/gradient
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(
-                        LinearGradient(
-                            gradient: Gradient(colors: [Color.nxtlapRacingRed.opacity(0.8), Color.orange.opacity(0.6)]),
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .aspectRatio(16/9, contentMode: .fit)
-                
-                // Series Icon or Name as placeholder
-                VStack(spacing: 4) {
-                    Image(systemName: "flag.checkered")
-                        .font(.system(size: 24))
-                        .foregroundColor(.white.opacity(0.4))
-                    Text(series.shortName)
-                        .font(.caption2)
-                        .fontWeight(.black)
-                        .foregroundColor(.white.opacity(0.4))
-                }
-                
-                // Play Button UI (from WatchView)
-                ZStack {
-                    Circle()
-                        .fill(.black.opacity(0.4))
-                        .frame(width: 50, height: 50)
-                        .blur(radius: 1)
-                    
-                    Image(systemName: "play.fill")
-                        .font(.system(size: 20, weight: .bold))
-                        .foregroundColor(.white)
-                        .offset(x: 2)
-                }
-                .background(Circle().stroke(Color.white.opacity(0.3), lineWidth: 2))
-            }
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            
-            // Content Section
+        HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 6) {
-                Text(race.name)
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(.white)
-                    .lineLimit(2)
+                HStack(alignment: .firstTextBaseline) {
+                    Text(race.name)
+                        .font(.subheadline)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                        .lineLimit(2)
+                    
+                    Spacer(minLength: 8)
+                    
+                    Text(formattedDate(race))
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .foregroundColor(.nxtlapRacingRed)
+                }
                 
                 HStack(spacing: 4) {
                     Image(systemName: "mappin.and.ellipse")
@@ -383,18 +317,14 @@ struct SeriesRaceCard: View {
                 }
                 .foregroundColor(.gray)
                 .lineLimit(1)
-                
-                Text(formattedDate(race))
-                    .font(.caption)
-                    .fontWeight(.bold)
-                    .foregroundColor(.nxtlapRacingRed)
             }
-            .padding(10)
+            .padding(.vertical, 12)
+            .padding(.trailing, 12)
         }
         .background(Color(white: 0.12))
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
         .overlay(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: 12)
                 .stroke(Color.white.opacity(0.1), lineWidth: 1)
         )
     }

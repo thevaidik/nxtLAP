@@ -55,14 +55,9 @@ struct WatchView: View {
                     .padding(.bottom, 12)
                     
                     // Segmented Picker
-                    Picker("Watch", selection: $selectedTab) {
-                        ForEach(WatchTab.allCases) { tab in
-                            Text(tab.rawValue).tag(tab)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 15)
+                    CustomSegmentedControl(selection: $selectedTab, options: WatchTab.allCases)
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 15)
                 }
                 .background(.ultraThinMaterial)
                 .background(Color.black.opacity(0.4))
