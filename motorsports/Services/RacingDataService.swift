@@ -90,7 +90,7 @@ class RacingDataService: ObservableObject {
             starredSeries = Set(savedData)
             print("📂 Loaded \(starredSeries.count) starred series from storage: \(starredSeries)")
         } else {
-            print("📂 No saved starred series found")
+            print("📂 No saved starred series found - will default to all on fetch")
         }
     }
     
@@ -127,6 +127,10 @@ class RacingDataService: ObservableObject {
                     newAllSeries.append(series)
                 }
                 self.allSeries = newAllSeries
+                if UserDefaults.standard.array(forKey: self.starredSeriesKey) == nil {
+                    self.starredSeries = Set(newAllSeries.map { $0.shortName })
+                    self.saveStarredSeries()
+                }
                 print("✅ Successfully loaded \(self.allSeries.count) series")
 
                 // 2. Fetch all racing data from TheSportsDB - NO MOCK DATA

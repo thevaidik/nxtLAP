@@ -268,7 +268,7 @@ struct HomeView: View {
             }
             
             if thisWeekGroups.isEmpty && nextWeekGroups.isEmpty && !upcomingWeekendGroups.isEmpty {
-                Text("No races in this week or next week — check back soon.")
+                Text("no races - but these are upcoming later")
                     .font(.subheadline)
                     .foregroundColor(.gray)
                     .multilineTextAlignment(.center)
