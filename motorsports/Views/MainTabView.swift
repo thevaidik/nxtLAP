@@ -8,7 +8,7 @@ struct MainTabView: View {
     @State private var selectedTab: Tab = .home
 
     enum Tab {
-        case home, watch, news, standings, settings
+        case home, watch, updates, standings, settings
     }
 
     var body: some View {
@@ -26,11 +26,11 @@ struct MainTabView: View {
                 }
                 .tag(Tab.watch)
 
-            NewsView()
+            UpdatesFeedView()
                 .tabItem {
-                    Label("News", systemImage: "newspaper.fill")
+                    Label("Feed", systemImage: "bubble.left")
                 }
-                .tag(Tab.news)
+                .tag(Tab.updates)
 
             StandingsView()
                 .tabItem {
