@@ -11,6 +11,7 @@ import Combine
 @MainActor
 class LivestreamViewModel: ObservableObject {
     @Published var streams: [Livestream] = []
+    @Published var channels: [ChannelMetadata] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var excludedChannelNames: Set<String> = []
@@ -30,8 +31,19 @@ class LivestreamViewModel: ObservableObject {
     
     var groupedChannels: [ChannelGroup] {
         let dict = Dictionary(grouping: streams) { $0.channelTitle }
-        return dict.map { ChannelGroup(name: $0.key, streams: $0.value) }
-            .sorted { $0.name < $1.name }
+        
+        // Start with dynamically fetched channels list
+        var channelsSet = Set(channels.map { $0.channelTitle })
+        
+        // Add any additional channel titles from the streams
+        for stream in streams {
+            channelsSet.insert(stream.channelTitle)
+        }
+        
+        return channelsSet.map { name in
+            ChannelGroup(name: name, streams: dict[name] ?? [])
+        }
+        .sorted { $0.name < $1.name }
     }
     
     var filteredStreams: [Livestream] {
@@ -59,10 +71,14 @@ class LivestreamViewModel: ObservableObject {
         errorMessage = nil
         
         do {
-            let fetchedStreams = try await livestreamService.fetchLivestreams()
-            self.streams = fetchedStreams
+            async let fetchedStreams = livestreamService.fetchLivestreams()
+            async let fetchedChannels = livestreamService.fetchChannels()
+            
+            let (streamsResult, channelsResult) = try await (fetchedStreams, fetchedChannels)
+            self.streams = streamsResult
+            self.channels = channelsResult
         } catch {
-            print("❌ Error fetching livestreams: \(error)")
+            print("❌ Error fetching livestreams/channels: \(error)")
             self.errorMessage = error.localizedDescription
         }
         

@@ -400,21 +400,15 @@ struct SeriesRaceRow: View {
     
     private func timeUntilRace(_ date: Date) -> String {
         let calendar = Calendar.current
-        let now = Date()
-        
-        let components = calendar.dateComponents([.day], from: now, to: date)
-        if let dayCount = components.day {
-            if dayCount == 0 {
-                return "Today"
-            } else if dayCount == 1 {
-                return "Tomorrow"
-            } else if dayCount > 0 {
-                return "in \(dayCount) days"
-            } else {
-                return "Past"
-            }
+        if calendar.isDateInToday(date) {
+            return "Today"
+        } else if calendar.isDateInTomorrow(date) {
+            return "Tomorrow"
+        } else if let dayCount = calendar.dateComponents([.day], from: calendar.startOfDay(for: Date()), to: calendar.startOfDay(for: date)).day, dayCount > 0 {
+            return "in \(dayCount) days"
+        } else {
+            return "Past"
         }
-        return ""
     }
 }
 

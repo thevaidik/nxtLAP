@@ -11,6 +11,9 @@ struct UpdatesFeedView: View {
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
+                .onTapGesture {
+                    hideKeyboard()
+                }
 
             HStack(spacing: 0) {
                 // ── Left Sidebar Navigation ──────────────────────────────────
@@ -103,9 +106,9 @@ struct UpdatesFeedView: View {
     private var feedView: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 16) {
-                    if activeSidebarSelection == "new" {
-                        // ── "NEW" Local Feed: Raw, clean borderless telemetry updates directly on dark chat panel ──
+                HStack {
+                    Spacer(minLength: 0)
+                    LazyVStack(alignment: .leading, spacing: 16) {
                         ForEach(filteredMessages) { message in
                             MessageBubbleView(
                                 message: message,
@@ -120,47 +123,14 @@ struct UpdatesFeedView: View {
                         Color.clear
                             .frame(height: 1)
                             .id("new_feed_bottom")
-                    } else {
-                        // ── Standard General Feed: Grouped by Matchups ──
-                        ForEach(groupedMessages) { group in
-                            VStack(alignment: .leading, spacing: 0) {
-                                matchupHeader(title: group.headerTitle, series: group.series)
-
-                                ZStack(alignment: .leading) {
-                                    if group.messages.count > 1 {
-                                        Rectangle()
-                                            .fill(Color.white.opacity(0.15))
-                                            .frame(width: 2)
-                                            .padding(.leading, 34)
-                                            .padding(.top, 24)
-                                            .padding(.bottom, 24)
-                                    }
-
-                                    VStack(alignment: .leading, spacing: 0) {
-                                        ForEach(Array(group.messages.enumerated()), id: \.element.id) { index, message in
-                                            MessageBubbleView(
-                                                message: message,
-                                                viewModel: viewModel,
-                                                isFirst: index == 0,
-                                                isLast: index == group.messages.count - 1,
-                                                hasThread: group.messages.count > 1
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                            .background(Color.white.opacity(0.015))
-                            .cornerRadius(12)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(Color.white.opacity(0.04), lineWidth: 1)
-                            )
-                            .padding(.horizontal, 12)
-                            .id(group.messages.last?.id)
-                        }
                     }
+                    .padding(.vertical, 12)
+                    .frame(maxWidth: 800)
+                    Spacer(minLength: 0)
                 }
-                .padding(.vertical, 12)
+            }
+            .onTapGesture {
+                hideKeyboard()
             }
             .refreshable {
                 if activeSidebarSelection == "new" {
@@ -320,95 +290,19 @@ struct UpdatesFeedView: View {
         }
     }
 
-    private var groupedMessages: [MessageGroup] {
-        var groups: [MessageGroup] = []
-        var currentRaceId: String? = nil
-        var currentMessages: [CommMessage] = []
-        var currentHeader = ""
-        var currentSeries = "general"
-        
-        for message in filteredMessages {
-            let msgRaceId = message.raceId ?? "general"
-            let msgDetails = message.parsedDetails
-            
-            if msgRaceId == currentRaceId && msgRaceId != "general" {
-                currentMessages.append(message)
-            } else {
-                if !currentMessages.isEmpty {
-                    groups.append(MessageGroup(headerTitle: currentHeader, series: currentSeries, messages: currentMessages))
-                }
-                currentRaceId = msgRaceId
-                currentMessages = [message]
-                currentHeader = msgDetails.headerTitle
-                currentSeries = msgDetails.series
-            }
-        }
-        if !currentMessages.isEmpty {
-            groups.append(MessageGroup(headerTitle: currentHeader, series: currentSeries, messages: currentMessages))
-        }
-        return groups
-    }
-
     /// Client-side synthesized bot updates about real upcoming races today and in the next 1 hour!
     private var clientMessages: [CommMessage] {
         var msgs: [CommMessage] = []
         let now = Date()
         let calendar = Calendar.current
         
-        // 1. Bot 1: Daily Briefing Bot (@nxt_daily) - All races scheduled for today
-        // Posted at 7:00 AM today so it is always already there when the user opens the app!
+        // 1. Bot 1: @nxt_10min Alert Bot (10-minute alert)
         let todayRaces = dataService.upcomingRaces.filter { race in
             calendar.isDateInToday(race.date)
         }
         
         for race in todayRaces {
-            let timeFormatter = DateFormatter()
-            timeFormatter.timeStyle = .short
-            let timeStr = timeFormatter.string(from: race.date)
-            
-            let content = "☀️ Daily Briefing: \(race.series.uppercased()) - The \(race.name) is scheduled for today at \(timeStr) at \(race.circuit ?? race.location)."
-            
-            // Set timestamp to 7:00 AM of today so it's simulated as already posted
-            let morningTime = calendar.date(bySettingHour: 7, minute: 0, second: 0, of: now) ?? now
-            
-            let msgId = "client_bot_daily_\(race.id)"
-            let msg = CommMessage(
-                id: msgId,
-                botName: "@nxt_daily",
-                content: content,
-                timestamp: ISO8601DateFormatter().string(from: morningTime),
-                messageType: .general,
-                raceId: race.id,
-                reactions: generateRandomReactions(forSeed: msgId),
-                replyCount: 0
-            )
-            msgs.append(msg)
-        }
-        
-        // 2. Bot 2 & 3: @nxt_sam Alert Bot (2-hour alert and 10-minute alert)
-        for race in todayRaces {
             let timeUntilStart = race.date.timeIntervalSince(now)
-            
-            // 2-Hour Alert (triggers if the race starts within 2 hours)
-            if timeUntilStart > 0 && timeUntilStart <= 7200 {
-                let content = "🔔 Sam's Alert: \(race.series.uppercased()) - The \(race.name) at \(race.circuit ?? race.location) starts in 2 hours. Set your notifications."
-                
-                // Simulated to have been posted a few minutes ago or now
-                let postTime = now.addingTimeInterval(-600)
-                
-                let msgId = "client_bot_2h_\(race.id)"
-                let msg = CommMessage(
-                    id: msgId,
-                    botName: "@nxt_sam",
-                    content: content,
-                    timestamp: ISO8601DateFormatter().string(from: postTime),
-                    messageType: .raceStart,
-                    raceId: race.id,
-                    reactions: generateRandomReactions(forSeed: msgId),
-                    replyCount: 0
-                )
-                msgs.append(msg)
-            }
             
             // 10-Minute Alert (triggers if the race starts within 10 minutes)
             if timeUntilStart > 0 && timeUntilStart <= 600 {
@@ -418,7 +312,7 @@ struct UpdatesFeedView: View {
                 let msgId = "client_bot_10m_\(race.id)"
                 let msg = CommMessage(
                     id: msgId,
-                    botName: "@nxt_sam",
+                    botName: "@nxt_10min",
                     content: content,
                     timestamp: ISO8601DateFormatter().string(from: now),
                     messageType: .raceStart,
@@ -430,36 +324,7 @@ struct UpdatesFeedView: View {
             }
         }
         
-        // 3. Fallback Preview Feed: If no races are scheduled for today, showcase professional future previews
-        if msgs.isEmpty {
-            let nextRaces = Array(dataService.upcomingRaces.prefix(3))
-            for (idx, race) in nextRaces.enumerated() {
-                let dateFormatter = DateFormatter()
-                dateFormatter.dateStyle = .medium
-                let dateStr = dateFormatter.string(from: race.date)
-                
-                let timeFormatter = DateFormatter()
-                timeFormatter.timeStyle = .short
-                let timeStr = timeFormatter.string(from: race.date)
-                
-                let content = "📅 Schedule Preview: \(race.series.uppercased()) - The \(race.name) is scheduled for \(dateStr) at \(timeStr) at \(race.circuit ?? race.location)."
-                
-                let yesterday = now.addingTimeInterval(-86400 * Double(idx + 1))
-                
-                let msgId = "client_bot_preview_\(race.id)"
-                let msg = CommMessage(
-                    id: msgId,
-                    botName: "@nxt_daily", // Daily bot handles scheduled previews
-                    content: content,
-                    timestamp: ISO8601DateFormatter().string(from: yesterday),
-                    messageType: .general,
-                    raceId: race.id,
-                    reactions: generateRandomReactions(forSeed: msgId),
-                    replyCount: 0
-                )
-                msgs.append(msg)
-            }
-        }
+        
         
         return msgs.sorted { $0.timestamp < $1.timestamp }
     }
@@ -520,6 +385,10 @@ struct UpdatesFeedView: View {
         default: return .racingRed
         }
     }
+    
+    private func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
 }
 
 // ── Left Sidebar Navigation Component ────────────────────────────────────────
@@ -552,7 +421,7 @@ struct ServerSidebarView: View {
                     .fill(Color.white.opacity(0.06))
                     .frame(width: 44, height: 44)
                     .overlay(
-                        Text("N")
+                        Text("G")
                             .font(.system(size: 20, weight: .black))
                             .foregroundColor(activeSelection == "general" ? .white : .gray)
                     )

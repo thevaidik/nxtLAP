@@ -10,6 +10,7 @@ struct MessageBubbleView: View {
     let hasThread: Bool
 
     @State private var showPicker = false
+    @State private var showReplies = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -49,11 +50,37 @@ struct MessageBubbleView: View {
                         .lineSpacing(4)
                         .fixedSize(horizontal: false, vertical: true)
 
-                    // Reaction bar
-                    if !message.reactionCounts.isEmpty {
-                        ReactionBarView(message: message, viewModel: viewModel)
-                            .padding(.top, 4)
+                    // Reaction & Action bar
+                    HStack(spacing: 12) {
+                        if !message.reactionCounts.isEmpty {
+                            ReactionBarView(message: message, viewModel: viewModel)
+                        }
+                        
+                        if message.botName != "@nxt_10min" {
+                            Button {
+                                HapticManager.shared.trigger(.light)
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                    showReplies.toggle()
+                                }
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "bubble.right\(showReplies ? ".fill" : "")")
+                                        .font(.system(size: 14, weight: .semibold))
+                                    if let count = message.replyCount, count > 0 {
+                                        Text("\(count)")
+                                            .font(.system(size: 13, weight: .semibold))
+                                    }
+                                }
+                                .foregroundColor(showReplies ? .racingRed : .secondary)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 6)
+                                .background(showReplies ? Color.racingRed.opacity(0.15) : Color.white.opacity(0.08))
+                                .cornerRadius(12)
+                            }
+                            .buttonStyle(.plain)
+                        }
                     }
+                    .padding(.top, 4)
                 }
 
                 Spacer()
@@ -61,8 +88,8 @@ struct MessageBubbleView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
             
-            // Curved thread line connecting to "view discussion" button (matches inspiration screenshot!)
-            if isLast && hasThread && message.botName != "@nxt_sam" && message.botName != "@nxt_daily" {
+            // Curved thread line connecting to "view discussion" button
+            if isLast && hasThread && message.botName != "@nxt_10min" {
                 HStack(spacing: 8) {
                     Path { path in
                         path.move(to: CGPoint(x: 18, y: -4))
@@ -93,15 +120,19 @@ struct MessageBubbleView: View {
             EmojiPickerSheet(message: message, viewModel: viewModel, isPresented: $showPicker)
                 .presentationDetents([.height(120)])
         }
+        
+        // Inline Replies Expansion
+        if showReplies {
+            MessageRepliesView(message: message, viewModel: viewModel)
+                .transition(.opacity.combined(with: .move(edge: .top)))
+        }
     }
 
     // ── Helper Styling computed properties ───────────────────────────────────
 
     private var avatarGradient: LinearGradient {
-        if message.botName == "@nxt_sam" {
+        if message.botName == "@nxt_10min" {
             return LinearGradient(colors: [Color.purple, Color.pink], startPoint: .topLeading, endPoint: .bottomTrailing)
-        } else if message.botName == "@nxt_daily" {
-            return LinearGradient(colors: [Color.yellow, Color.orange], startPoint: .topLeading, endPoint: .bottomTrailing)
         }
         
         switch message.parsedDetails.series {
@@ -119,10 +150,8 @@ struct MessageBubbleView: View {
     }
 
     private var avatarIcon: String {
-        if message.botName == "@nxt_sam" {
+        if message.botName == "@nxt_10min" {
             return "clock.fill"
-        } else if message.botName == "@nxt_daily" {
-            return "sun.max.fill"
         }
         
         switch message.parsedDetails.series {
@@ -134,10 +163,8 @@ struct MessageBubbleView: View {
     }
 
     private var avatarColor: Color {
-        if message.botName == "@nxt_sam" {
+        if message.botName == "@nxt_10min" {
             return .pink
-        } else if message.botName == "@nxt_daily" {
-            return .orange
         }
         
         switch message.parsedDetails.series {

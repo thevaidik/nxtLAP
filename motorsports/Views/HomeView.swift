@@ -102,42 +102,47 @@ struct HomeView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 0) {
-                    // Header Section with Stories
+                HStack {
+                    Spacer(minLength: 0)
                     VStack(spacing: 0) {
-                        HStack {
-                            Text("NxtLAP")
-                                .font(.system(size: 32, weight: .bold))
-                                .foregroundColor(dataService.isDevMode ? .green : .white)
-                                .onTapGesture(count: 6) {
-                                    dataService.toggleDevMode()
-                                }
+                        // Header Section with Stories
+                        VStack(spacing: 0) {
+                            HStack {
+                                Text("NxtLAP")
+                                    .font(.system(size: 32, weight: .bold))
+                                    .foregroundColor(dataService.isDevMode ? .green : .white)
+                                    .onTapGesture(count: 6) {
+                                        dataService.toggleDevMode()
+                                    }
+                                
+                                Spacer()
+                            }
+                            .padding(.horizontal, 20)
+                            .padding(.top, 20)
                             
-                            Spacer()
+                            // News Stories - Instagram style
+                            NewsStoriesView(newsViewModel: newsViewModel)
+                                .padding(.top, 16)
+                                .padding(.bottom, 8)
+                            
+                            // Watch Now Carousel - suggests from Watch tab
+                            WatchNowCarouselView()
+                                .padding(.top, 8)
+                                .padding(.bottom, 16)
                         }
-                        .padding(.horizontal, 20)
-                        .padding(.top, 20)
                         
-                        // News Stories - Instagram style
-                        NewsStoriesView(newsViewModel: newsViewModel)
-                            .padding(.top, 16)
-                            .padding(.bottom, 8)
-                        
-                        // Watch Now Carousel - suggests from Watch tab
-                        WatchNowCarouselView()
-                            .padding(.top, 8)
-                            .padding(.bottom, 16)
+                        // Main Content
+                        if dataService.isLoadingData && dataService.upcomingRaces.isEmpty {
+                            RacingLoadingView()
+                                .padding(.top, 40)
+                        } else if dataService.starredSeriesList.isEmpty {
+                            emptyStateView
+                        } else {
+                            racesContentView
+                        }
                     }
-                    
-                    // Main Content
-                    if dataService.isLoadingData && dataService.upcomingRaces.isEmpty {
-                        RacingLoadingView()
-                            .padding(.top, 40)
-                    } else if dataService.starredSeriesList.isEmpty {
-                        emptyStateView
-                    } else {
-                        racesContentView
-                    }
+                    .frame(maxWidth: 800)
+                    Spacer(minLength: 0)
                 }
             }
             .background(
@@ -478,18 +483,21 @@ struct SessionRow: View {
     
     private func countdownText(for race: Race) -> String {
         let calendar = Calendar.current
-        let now = Date()
-        let components = calendar.dateComponents([.day, .hour], from: now, to: race.date)
         
-        guard let days = components.day, let hours = components.hour else { return "" }
-        if days == 0 {
+        if calendar.isDateInToday(race.date) {
             if race.hasExactTime {
-                return hours == 0 ? "Soon" : "in \(hours)h"
+                let components = calendar.dateComponents([.hour], from: Date(), to: race.date)
+                let hours = components.hour ?? 0
+                return hours <= 0 ? "Soon" : "in \(hours)h"
             } else {
                 return "Today"
             }
+        } else if calendar.isDateInTomorrow(race.date) {
+            return "Tomorrow"
+        } else if let dayCount = calendar.dateComponents([.day], from: calendar.startOfDay(for: Date()), to: calendar.startOfDay(for: race.date)).day, dayCount > 0 {
+            return "in \(dayCount)d"
         } else {
-            return "in \(days)d"
+            return "Past"
         }
     }
 }

@@ -17,7 +17,7 @@ struct SettingsView: View {
     }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack(spacing: 0) {
                 headerActions
                 
@@ -135,29 +135,34 @@ struct SettingsView: View {
     // MARK: - All Races
     private var allRacesContent: some View {
         ScrollView {
-            LazyVStack(spacing: 16) {
-                ForEach(RacingCategory.allCases, id: \.self) { category in
-                    let seriesInCategory = dataService.allSeries.filter { $0.category == category }
-                    if !seriesInCategory.isEmpty {
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack {
-                                Text(category.rawValue)
-                                    .font(.footnote)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.white)
-                                Spacer()
-                            }
-                            .padding(.horizontal, 20)
-
-                            LazyVStack(spacing: 8) {
-                                ForEach(seriesInCategory) { series in
-                                    SeriesRow(series: series)
+            HStack {
+                Spacer(minLength: 0)
+                LazyVStack(spacing: 16) {
+                    ForEach(RacingCategory.allCases, id: \.self) { category in
+                        let seriesInCategory = dataService.allSeries.filter { $0.category == category }
+                        if !seriesInCategory.isEmpty {
+                            VStack(alignment: .leading, spacing: 12) {
+                                HStack {
+                                    Text(category.rawValue)
+                                        .font(.footnote)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.white)
+                                    Spacer()
                                 }
+                                .padding(.horizontal, 20)
+
+                                LazyVStack(spacing: 8) {
+                                    ForEach(seriesInCategory) { series in
+                                        SeriesRow(series: series)
+                                    }
+                                }
+                                .padding(.horizontal, 18)
                             }
-                            .padding(.horizontal, 18)
                         }
                     }
                 }
+                .frame(maxWidth: 800)
+                Spacer(minLength: 0)
             }
             .padding(.vertical, 16)
         }
@@ -195,20 +200,25 @@ struct SettingsView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("STREAMING CHANNELS")
-                            .font(.footnote)
-                            .fontWeight(.bold)
-                            .foregroundColor(.gray)
-                            .padding(.horizontal, 20)
-                            .padding(.top, 16)
+                    HStack {
+                        Spacer(minLength: 0)
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("STREAMING CHANNELS")
+                                .font(.footnote)
+                                .fontWeight(.bold)
+                                .foregroundColor(.gray)
+                                .padding(.horizontal, 20)
+                                .padding(.top, 16)
 
-                        LazyVStack(spacing: 12) {
-                            ForEach(livestreamViewModel.groupedChannels) { channelGroup in
-                                ChannelToggleRow(channelGroup: channelGroup)
+                            LazyVStack(spacing: 12) {
+                                ForEach(livestreamViewModel.groupedChannels) { channelGroup in
+                                    ChannelToggleRow(channelGroup: channelGroup)
+                                }
                             }
+                            .padding(.horizontal, 18)
                         }
-                        .padding(.horizontal, 18)
+                        .frame(maxWidth: 800)
+                        Spacer(minLength: 0)
                     }
                     .padding(.bottom, 20)
                 }
@@ -227,30 +237,43 @@ struct ChannelToggleRow: View {
     var body: some View {
         HStack(spacing: 16) {
             // Channel Icon / Thumbnail
-            if let firstStream = channelGroup.streams.first {
-                AsyncImage(url: URL(string: firstStream.thumbnailUrl)) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } placeholder: {
-                    Color.gray.opacity(0.2)
-                }
-                .frame(width: 80, height: 45)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
-                .overlay(
-                    // Badge for stream count
-                    ZStack {
-                        Circle()
-                            .fill(Color.racingRed)
-                            .frame(width: 20, height: 20)
-                        Text("\(channelGroup.streams.count)")
-                            .font(.system(size: 11, weight: .bold))
-                            .foregroundColor(.white)
+            ZStack {
+                if let firstStream = channelGroup.streams.first {
+                    AsyncImage(url: URL(string: firstStream.thumbnailUrl)) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    } placeholder: {
+                        Color.gray.opacity(0.2)
                     }
-                    .offset(x: 5, y: -5),
-                    alignment: .topTrailing
-                )
+                } else {
+                    ZStack {
+                        Color.gray.opacity(0.15)
+                        Image(systemName: "video.fill")
+                            .foregroundColor(.gray.opacity(0.5))
+                            .font(.system(size: 16))
+                    }
+                }
             }
+            .frame(width: 80, height: 45)
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .overlay(
+                // Badge for stream count (only if there are streams)
+                Group {
+                    if !channelGroup.streams.isEmpty {
+                        ZStack {
+                            Circle()
+                                .fill(Color.racingRed)
+                                .frame(width: 20, height: 20)
+                            Text("\(channelGroup.streams.count)")
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundColor(.white)
+                        }
+                        .offset(x: 5, y: -5)
+                    }
+                },
+                alignment: .topTrailing
+            )
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(channelGroup.name)

@@ -106,59 +106,64 @@ struct WatchView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             ScrollView {
-                VStack(spacing: 24) {
-                    if tab == .watch {
-                        if viewModel.pastStreams.isEmpty {
-                            emptyStateView(title: "No Past Broadcasts", message: "Completed streams will appear here.")
-                                .padding(.top, 160)
-                        } else {
-                            let chunks = viewModel.pastStreams.chunked(into: 12)
-                            ForEach(Array(chunks.enumerated()), id: \.offset) { index, chunk in
-                                VStack(alignment: .leading, spacing: 12) {
-                                    TabView {
-                                        ForEach(chunk) { stream in
-                                            LivestreamCard(stream: stream, isWatchTab: true) {
-                                                selectedStream = stream
-                                            }
-                                            .padding(.horizontal, 16)
-                                            .padding(.bottom, 44) // Space for dots
-                                        }
-                                    }
-                                    .tabViewStyle(.page(indexDisplayMode: .always))
-                                    .frame(height: 360)
-                                    .padding(.horizontal, -16) // Negate outer horizontal padding so dots can center
-                                }
-                            }
-                        }
-                    } else {
-                        if viewModel.upcomingStreams.isEmpty {
-                            emptyStateView(title: "No Upcoming Events", message: "Check back later for live racing action.")
-                                .padding(.top, 160)
-                        } else {
-                            let chunks = viewModel.upcomingStreams.chunked(into: 12)
-                            ForEach(Array(chunks.enumerated()), id: \.offset) { index, chunk in
-                                VStack(alignment: .leading, spacing: 12) {
-                                    if index == 0 {
-                                        SectionHeader(title: "Upcoming", icon: "calendar", color: .blue)
-                                    }
-                                    TabView {
-                                        ForEach(chunk) { stream in
-                                            LivestreamCard(stream: stream) {
-                                                if stream.effectiveStatus == .live {
+                HStack {
+                    Spacer(minLength: 0)
+                    VStack(spacing: 24) {
+                        if tab == .watch {
+                            if viewModel.pastStreams.isEmpty {
+                                emptyStateView(title: "No Past Broadcasts", message: "Completed streams will appear here.")
+                                    .padding(.top, 160)
+                            } else {
+                                let chunks = viewModel.pastStreams.chunked(into: 12)
+                                ForEach(Array(chunks.enumerated()), id: \.offset) { index, chunk in
+                                    VStack(alignment: .leading, spacing: 12) {
+                                        TabView {
+                                            ForEach(chunk) { stream in
+                                                LivestreamCard(stream: stream, isWatchTab: true) {
                                                     selectedStream = stream
                                                 }
+                                                .padding(.horizontal, 16)
+                                                .padding(.bottom, 44) // Space for dots
                                             }
-                                            .padding(.horizontal, 16)
-                                            .padding(.bottom, 44) // Space for dots
                                         }
+                                        .tabViewStyle(.page(indexDisplayMode: .always))
+                                        .frame(height: 360)
+                                        .padding(.horizontal, -16) // Negate outer horizontal padding so dots can center
                                     }
-                                    .tabViewStyle(.page(indexDisplayMode: .always))
-                                    .frame(height: 420) // Taller because of action button
-                                    .padding(.horizontal, -16)
+                                }
+                            }
+                        } else {
+                            if viewModel.upcomingStreams.isEmpty {
+                                emptyStateView(title: "No Upcoming Events", message: "Check back later for live racing action.")
+                                    .padding(.top, 160)
+                            } else {
+                                let chunks = viewModel.upcomingStreams.chunked(into: 12)
+                                ForEach(Array(chunks.enumerated()), id: \.offset) { index, chunk in
+                                    VStack(alignment: .leading, spacing: 12) {
+                                        if index == 0 {
+                                            SectionHeader(title: "Upcoming", icon: "calendar", color: .blue)
+                                        }
+                                        TabView {
+                                            ForEach(chunk) { stream in
+                                                LivestreamCard(stream: stream) {
+                                                    if stream.effectiveStatus == .live {
+                                                        selectedStream = stream
+                                                    }
+                                                }
+                                                .padding(.horizontal, 16)
+                                                .padding(.bottom, 44) // Space for dots
+                                            }
+                                        }
+                                        .tabViewStyle(.page(indexDisplayMode: .always))
+                                        .frame(height: 420) // Taller because of action button
+                                        .padding(.horizontal, -16)
+                                    }
                                 }
                             }
                         }
                     }
+                    .frame(maxWidth: 800)
+                    Spacer(minLength: 0)
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 150) // Space for sticky header

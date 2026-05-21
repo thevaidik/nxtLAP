@@ -10,6 +10,9 @@ class CommViewModel: ObservableObject {
 
     @Published var localReactions: [String: [String: ReactionData]] = [:]
 
+    @Published var replies: [String: [CommReply]] = [:]
+    @Published var isFetchingReplies = false
+
     private let service = CommService()
 
     /// Persistent device ID used as userId for reactions.
@@ -102,5 +105,43 @@ class CommViewModel: ObservableObject {
         }
         // Also keep localReactions dictionary synchronized with the server's master state
         localReactions[updated.id] = updated.reactions
+    }
+
+    func fetchReplies(for messageId: String) async {
+        isFetchingReplies = true
+        do {
+            let fetched = try await service.fetchReplies(for: messageId)
+            replies[messageId] = fetched
+        } catch {
+            print("❌ fetchReplies failed: \(error)")
+        }
+        isFetchingReplies = false
+    }
+    
+    func postReply(to messageId: String, content: String) async {
+        do {
+            let newReply = try await service.postReply(to: messageId, content: content, userId: deviceId)
+            var current = replies[messageId] ?? []
+            current.append(newReply)
+            replies[messageId] = current
+            
+            // Increment reply count locally for UI feedback
+            if let idx = messages.firstIndex(where: { $0.id == messageId }) {
+                let msg = messages[idx]
+                let newCount = (msg.replyCount ?? 0) + 1
+                messages[idx] = CommMessage(
+                    id: msg.id,
+                    botName: msg.botName,
+                    content: msg.content,
+                    timestamp: msg.timestamp,
+                    messageType: msg.messageType,
+                    raceId: msg.raceId,
+                    reactions: msg.reactions,
+                    replyCount: newCount
+                )
+            }
+        } catch {
+            print("❌ postReply failed: \(error)")
+        }
     }
 }

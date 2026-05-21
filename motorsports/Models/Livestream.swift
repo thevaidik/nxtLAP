@@ -81,3 +81,9 @@ enum LivestreamStatus: String, Codable {
         }
     }
 }
+
+struct ChannelMetadata: Codable, Identifiable {
+    var id: String { channelId }
+    let channelId: String
+    let channelTitle: String
+}

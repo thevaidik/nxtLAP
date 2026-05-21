@@ -15,7 +15,7 @@ struct StandingsView: View {
     }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack(spacing: 0) {
                 CustomSegmentedControl(selection: $selectedTab, options: StandingsTab.allCases)
                     .padding(.horizontal, 16)
@@ -62,10 +62,15 @@ struct StandingsView: View {
     // MARK: - Drivers List
     private var driversList: some View {
         ScrollView {
-            LazyVStack(spacing: 8) {
-                ForEach(viewModel.drivers) { driver in
-                    DriverStandingRow(driver: driver)
+            HStack {
+                Spacer(minLength: 0)
+                LazyVStack(spacing: 8) {
+                    ForEach(viewModel.drivers) { driver in
+                        DriverStandingRow(driver: driver)
+                    }
                 }
+                .frame(maxWidth: 800)
+                Spacer(minLength: 0)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
@@ -75,10 +80,15 @@ struct StandingsView: View {
     // MARK: - Constructors List
     private var constructorsList: some View {
         ScrollView {
-            LazyVStack(spacing: 8) {
-                ForEach(viewModel.constructors) { constructor in
-                    ConstructorStandingRow(constructor: constructor)
+            HStack {
+                Spacer(minLength: 0)
+                LazyVStack(spacing: 8) {
+                    ForEach(viewModel.constructors) { constructor in
+                        ConstructorStandingRow(constructor: constructor)
+                    }
                 }
+                .frame(maxWidth: 800)
+                Spacer(minLength: 0)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)

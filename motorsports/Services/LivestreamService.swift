@@ -32,5 +32,28 @@ class LivestreamService {
             print("❌ Decoding error in LivestreamService: \(error)")
             throw APIError.decodingError(error)
         }
-    }
+     }
+     
+     func fetchChannels() async throws -> [ChannelMetadata] {
+         guard let url = URL(string: "\(urlString)?channels=true") else {
+             throw URLError(.badURL)
+         }
+         
+         let (data, response) = try await session.data(from: url)
+         
+         if let httpResponse = response as? HTTPURLResponse {
+             if httpResponse.statusCode != 200 {
+                 throw APIError.httpError(httpResponse.statusCode)
+             }
+         }
+         
+         do {
+             let decoder = JSONDecoder()
+             let channels = try decoder.decode([ChannelMetadata].self, from: data)
+             return channels
+         } catch {
+             print("❌ Decoding error in fetchChannels: \(error)")
+             throw APIError.decodingError(error)
+         }
+     }
 }

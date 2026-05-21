@@ -17,15 +17,17 @@ struct SharedRace: Identifiable, Codable {
     let date: Date
     let location: String
     let circuit: String?
+    let hasExactTime: Bool
 
     // Provide a convenient initializer for previews and samples
-    init(id: UUID = UUID(), name: String, series: String, date: Date, location: String, circuit: String?) {
+    init(id: UUID = UUID(), name: String, series: String, date: Date, location: String, circuit: String?, hasExactTime: Bool = true) {
         self.id = id
         self.name = name
         self.series = series
         self.date = date
         self.location = location
         self.circuit = circuit
+        self.hasExactTime = hasExactTime
     }
 
     // Custom decoding to tolerate missing/variant fields from the app's JSON
@@ -36,6 +38,7 @@ struct SharedRace: Identifiable, Codable {
         date = try c.decode(Date.self, forKey: .date)
         location = try c.decode(String.self, forKey: .location)
         circuit = try c.decodeIfPresent(String.self, forKey: .circuit)
+        hasExactTime = (try? c.decodeIfPresent(Bool.self, forKey: .hasExactTime)) ?? true
 
         // Try UUID directly; if absent or not a UUID, attempt a string UUID; else generate one
         if let uuid = try? c.decode(UUID.self, forKey: .id) {
@@ -48,7 +51,7 @@ struct SharedRace: Identifiable, Codable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, name, series, date, location, circuit
+        case id, name, series, date, location, circuit, hasExactTime
     }
 }
 
@@ -138,11 +141,12 @@ struct Provider: TimelineProvider {
         guard let starred = starred, !starred.isEmpty else {
             return [] // Show empty state if no series are starred
         }
+        let lowercasedStarred = Set(starred.map { $0.lowercased() })
         
         // Consider only main race sessions
         let mainRaces = races.filter { isMainRace($0.name) }
         let base = mainRaces.isEmpty ? races : mainRaces
-        let filtered = base.filter { starred.contains($0.series) }
+        let filtered = base.filter { lowercasedStarred.contains($0.series.lowercased()) }
         return Array(filtered.prefix(5))
     }
 
@@ -177,40 +181,65 @@ struct RaceWidgetEntryView: View {
     // MARK: - Small Widget (1 Race)
     @ViewBuilder
     private func smallWidgetView(race: SharedRace) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("NEXT RACE")
-                .font(.system(size: 10, weight: .bold, design: .rounded))
-                .foregroundColor(.gray)
+        VStack(alignment: .leading, spacing: 0) {
+            // Header
+            HStack {
+                Text("Next Race")
+                    .font(.system(size: 14, weight: .black, design: .rounded))
+                    .foregroundStyle(
+                        LinearGradient(colors: [Color(red: 0.7, green: 1.0, blue: 0.2), Color(red: 0.2, green: 0.8, blue: 0.2)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                    )
+                Spacer()
+            }
+            .padding(.bottom, 12)
             
-            Text(race.series)
-                .font(.system(size: 12, weight: .black, design: .rounded))
+            // Icon Badge & Series
+            HStack(spacing: 8) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(seriesColor(race.series).opacity(0.2))
+                        .frame(width: 28, height: 28)
+                    
+                    Image(systemName: seriesIcon(race.series))
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(seriesColor(race.series))
+                }
+                
+                Text(race.series)
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .foregroundColor(.white)
+            }
+            .padding(.bottom, 8)
+            
+            Text(race.name)
+                .font(.system(size: 14, weight: .bold, design: .rounded))
                 .foregroundColor(.white)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 3)
-                .background(Color.red.opacity(0.9))
-                .cornerRadius(6)
+                .lineLimit(2)
+                .minimumScaleFactor(0.8)
+                .padding(.bottom, 2)
+            
+            Text(race.location)
+                .font(.system(size: 10, weight: .medium))
+                .foregroundColor(.gray)
+                .lineLimit(1)
             
             Spacer(minLength: 0)
             
-            Text(race.name)
-                .font(.system(size: 14, weight: .bold))
-                .foregroundColor(.white)
-                .lineLimit(3)
-                .minimumScaleFactor(0.8)
-            
-            HStack(spacing: 6) {
-                Image(systemName: "calendar")
-                    .foregroundColor(.red)
-                Text(timeUntilRace(race.date))
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(.white.opacity(0.9))
+            // Footer: Time and Date
+            HStack(alignment: .bottom) {
+                VStack(alignment: .leading, spacing: 2) {
+                    if race.hasExactTime {
+                        Text(formatTime(race))
+                            .font(.system(size: 14, weight: .heavy, design: .rounded))
+                            .foregroundColor(.white)
+                    }
+                    
+                    Text(formatDate(race.date))
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundColor(.gray)
+                }
                 Spacer()
             }
-            
-            Text(race.location)
-                .font(.system(size: 11, weight: .medium))
-                .foregroundColor(.gray)
-                .lineLimit(1)
         }
         .padding(14)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -219,49 +248,133 @@ struct RaceWidgetEntryView: View {
     // MARK: - Medium/Large Widget (List)
     @ViewBuilder
     private func mediumLargeWidgetView(races: [SharedRace]) -> some View {
-        let maxCount = family == .systemMedium ? 3 : 4
-        VStack(alignment: .leading, spacing: 10) {
-            Text("NEXT RACES")
-                .font(.system(size: 12, weight: .black, design: .rounded))
-                .foregroundColor(.red)
+        let isMedium = family == .systemMedium
+        let maxCount = isMedium ? 3 : 6 // 3 for medium, 6 for large
+        
+        VStack(alignment: .leading, spacing: 0) {
+            // Header
+            HStack(alignment: .top) {
+                Text("This Week")
+                    .font(.system(size: 16, weight: .black, design: .rounded))
+                    .foregroundStyle(
+                        LinearGradient(colors: [Color(red: 0.7, green: 1.0, blue: 0.2), Color(red: 0.2, green: 0.8, blue: 0.2)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                    )
+                Spacer()
+                Text("NxtLAP")
+                    .font(.system(size: 12, weight: .black, design: .rounded))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Color(red: 0.85, green: 0.15, blue: 0.15))
+                    .cornerRadius(4)
+            }
+            .padding(.bottom, 12)
             
-            Divider().overlay(Color.white.opacity(0.14))
-            
-            VStack(alignment: .leading, spacing: family == .systemMedium ? 9 : 10) {
+            // Rows
+            VStack(alignment: .leading, spacing: isMedium ? 10 : 12) {
                 ForEach(races.prefix(maxCount)) { race in
-                    HStack(alignment: .center, spacing: 10) {
-                        Text(race.series)
-                            .font(.system(size: 11, weight: .bold))
-                            .foregroundColor(.white)
-                            .frame(width: 58, alignment: .center)
-                            .padding(.vertical, 5)
-                            .background(Color.red.opacity(0.9))
-                            .clipShape(RoundedRectangle(cornerRadius: 6))
-                        
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text(race.name)
-                                .font(.system(size: 13, weight: .semibold))
-                                .foregroundColor(.white)
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.8)
-                            Text(race.location)
-                                .font(.system(size: 11))
-                                .foregroundColor(.gray)
-                                .lineLimit(1)
-                        }
-                        
-                        Spacer(minLength: 4)
-                        
-                        Text(timeUntilRace(race.date))
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(.white.opacity(0.85))
-                    }
+                    raceRow(race)
                 }
             }
+            
             Spacer(minLength: 0)
+            
+            // Footer
+            let remaining = races.count - maxCount
+            if remaining > 0 {
+                HStack(spacing: 6) {
+                    Text("+\(remaining)")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(.gray)
+                    
+                    HStack(spacing: 4) {
+                        ForEach(0..<min(remaining, 12), id: \.self) { i in
+                            Circle()
+                                .fill(seriesColor(races[maxCount + i].series))
+                                .frame(width: 6, height: 6)
+                        }
+                    }
+                }
+                .padding(.top, isMedium ? 8 : 12)
+            }
         }
-        .padding(14)
+        .padding(isMedium ? 14 : 16)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+
+    private func raceRow(_ race: SharedRace) -> some View {
+        HStack(alignment: .center, spacing: 10) {
+            // Left Icon Badge (App style)
+            ZStack {
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(seriesColor(race.series).opacity(0.2))
+                    .frame(width: 28, height: 28)
+                
+                Image(systemName: seriesIcon(race.series))
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(seriesColor(race.series))
+            }
+            
+            // Middle Body
+            VStack(alignment: .leading, spacing: 2) {
+                Text("\(race.series) - \(race.name)")
+                    .font(.system(size: 12, weight: .bold, design: .rounded))
+                    .foregroundColor(.white)
+                    .lineLimit(1)
+                
+                Text(race.location)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundColor(.gray)
+                    .lineLimit(1)
+            }
+            
+            Spacer(minLength: 8)
+            
+            // Right Body
+            VStack(alignment: .trailing, spacing: 2) {
+                if race.hasExactTime {
+                    Text(formatTime(race))
+                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        .foregroundColor(.white)
+                }
+                
+                Text(formatDate(race.date))
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundColor(.gray)
+            }
+        }
+    }
+
+    private func seriesIcon(_ series: String) -> String {
+        switch series.lowercased() {
+        case "formula1", "f1": return "car.side.fill"
+        case "motogp": return "motorcycle.fill"
+        case "nascar": return "checkerboard.shield"
+        default: return "flag.checkered"
+        }
+    }
+
+    private func seriesColor(_ series: String) -> Color {
+        switch series.lowercased() {
+        case "formula1", "f1": return .red
+        case "motogp": return .orange
+        case "nascar": return .yellow
+        case "formulae": return .blue
+        case "indycar": return .green
+        default: return Color(red: 0.85, green: 0.15, blue: 0.15)
+        }
+    }
+
+    private func formatTime(_ race: SharedRace) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        return formatter.string(from: race.date)
+    }
+
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEE MMM d"
+        return formatter.string(from: date)
     }
     
     // MARK: - Empty State
@@ -290,21 +403,11 @@ struct RaceWidget: Widget {
             if #available(iOS 17.0, *) {
                 RaceWidgetEntryView(entry: entry)
                     .containerBackground(for: .widget) {
-                        LinearGradient(
-                            colors: [Color.black.opacity(0.96), Color(red: 0.08, green: 0.08, blue: 0.1)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
+                        Color(red: 0.08, green: 0.11, blue: 0.16)
                     }
             } else {
                 RaceWidgetEntryView(entry: entry)
-                    .background(
-                        LinearGradient(
-                            colors: [Color.black.opacity(0.96), Color(red: 0.08, green: 0.08, blue: 0.1)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
+                    .background(Color(red: 0.08, green: 0.11, blue: 0.16))
             }
         }
         .configurationDisplayName("Upcoming Races")
@@ -339,8 +442,32 @@ private func timeUntilRace(_ date: Date) -> String {
     RaceEntry(
         date: .now,
         races: [
-            SharedRace(id: UUID(), name: "Monaco Grand Prix", series: "F1", date: Date().addingTimeInterval(86400), location: "Monaco", circuit: nil),
-            SharedRace(id: UUID(), name: "Indianapolis 500", series: "INDYCAR", date: Date().addingTimeInterval(172800), location: "Indianapolis", circuit: nil)
+            SharedRace(id: UUID(), name: "Practice 4 (Fast Friday)", series: "IndyCar", date: Date().addingTimeInterval(3600*2), location: "Indianapolis Motor Speedway", circuit: "Indianapolis Motor Speedway"),
+            SharedRace(id: UUID(), name: "Qualifying", series: "Silverstone 24H", date: Date().addingTimeInterval(3600*4.25), location: "Silverstone", circuit: "Silverstone"),
+            SharedRace(id: UUID(), name: "Practice", series: "NASCAR Cup", date: Date().addingTimeInterval(3600*5), location: "Dover", circuit: "Dover"),
+            SharedRace(id: UUID(), name: "Practice 2", series: "Formula E", date: Date().addingTimeInterval(3600*16), location: "Monaco", circuit: "Monaco"),
+            SharedRace(id: UUID(), name: "Practice", series: "British Truck Racing", date: Date().addingTimeInterval(3600*17), location: "Thruxton", circuit: "Thruxton")
+        ],
+        isLoading: false,
+        error: nil
+    )
+}
+
+#Preview(as: .systemLarge) {
+    RaceWidget()
+} timeline: {
+    RaceEntry(
+        date: .now,
+        races: [
+            SharedRace(id: UUID(), name: "Practice 4 (Fast Friday)", series: "IndyCar", date: Date().addingTimeInterval(3600*2), location: "Indianapolis Motor Speedway", circuit: "Indianapolis Motor Speedway"),
+            SharedRace(id: UUID(), name: "Qualifying", series: "Silverstone 24H", date: Date().addingTimeInterval(3600*4.25), location: "Silverstone", circuit: "Silverstone"),
+            SharedRace(id: UUID(), name: "Practice", series: "NASCAR Cup", date: Date().addingTimeInterval(3600*5), location: "Dover", circuit: "Dover"),
+            SharedRace(id: UUID(), name: "Night Practice", series: "Silverstone 24H", date: Date().addingTimeInterval(3600*6.15), location: "Silverstone", circuit: "Silverstone"),
+            SharedRace(id: UUID(), name: "Practice 2", series: "Formula E", date: Date().addingTimeInterval(3600*16), location: "Monaco", circuit: "Monaco"),
+            SharedRace(id: UUID(), name: "Practice", series: "British Truck Racing", date: Date().addingTimeInterval(3600*17), location: "Thruxton", circuit: "Thruxton"),
+            SharedRace(id: UUID(), name: "Qualifying 1", series: "Formula E", date: Date().addingTimeInterval(3600*17.6), location: "Monaco", circuit: "Monaco"),
+            SharedRace(id: UUID(), name: "Practice", series: "GT Cup UK", date: Date().addingTimeInterval(3600*17.9), location: "Snetterton", circuit: "Snetterton"),
+            SharedRace(id: UUID(), name: "Qualifying", series: "F1", date: Date().addingTimeInterval(3600*18), location: "Monaco", circuit: "Monaco")
         ],
         isLoading: false,
         error: nil
