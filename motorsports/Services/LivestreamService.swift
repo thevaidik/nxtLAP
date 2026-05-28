@@ -18,10 +18,8 @@ class LivestreamService {
         
         let (data, response) = try await session.data(from: url)
         
-        if let httpResponse = response as? HTTPURLResponse {
-            if httpResponse.statusCode != 200 {
-                throw APIError.httpError(httpResponse.statusCode)
-            }
+        if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
+            throw APIError.httpError(httpResponse.statusCode)
         }
         
         do {
@@ -29,7 +27,6 @@ class LivestreamService {
             let streams = try decoder.decode([Livestream].self, from: data)
             return streams
         } catch {
-            print("❌ Decoding error in LivestreamService: \(error)")
             throw APIError.decodingError(error)
         }
      }
@@ -41,10 +38,8 @@ class LivestreamService {
          
          let (data, response) = try await session.data(from: url)
          
-         if let httpResponse = response as? HTTPURLResponse {
-             if httpResponse.statusCode != 200 {
-                 throw APIError.httpError(httpResponse.statusCode)
-             }
+         if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
+             throw APIError.httpError(httpResponse.statusCode)
          }
          
          do {
@@ -52,7 +47,6 @@ class LivestreamService {
              let channels = try decoder.decode([ChannelMetadata].self, from: data)
              return channels
          } catch {
-             print("❌ Decoding error in fetchChannels: \(error)")
              throw APIError.decodingError(error)
          }
      }

@@ -19,37 +19,11 @@ class NewsService: ObservableObject {
         let (data, response) = try await session.data(from: url)
         
         if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
-            print("❌ HTTP Error: \(httpResponse.statusCode)")
             throw APIError.httpError(httpResponse.statusCode)
         }
         
-        // Debug: Print raw response
-        if let jsonString = String(data: data, encoding: .utf8) {
-            print("📡 Raw API Response: \(jsonString)")
-        }
-        
-        // Check if data is empty
-        if data.isEmpty {
-            print("❌ Empty response data")
-            throw APIError.noDataAvailable("No news data available")
-        }
-        
-        do {
-            let decoder = JSONDecoder()
-            let articles = try decoder.decode([NewsArticle].self, from: data)
-            print("✅ Successfully decoded \(articles.count) articles")
-            return articles
-        } catch let DecodingError.keyNotFound(key, context) {
-            print("❌ Missing key '\(key.stringValue)' - \(context.debugDescription)")
-            print("   Coding path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "))")
-            throw APIError.decodingError(DecodingError.keyNotFound(key, context))
-        } catch let DecodingError.typeMismatch(type, context) {
-            print("❌ Type mismatch for type '\(type)' - \(context.debugDescription)")
-            print("   Coding path: \(context.codingPath.map { $0.stringValue }.joined(separator: " -> "))")
-            throw APIError.decodingError(DecodingError.typeMismatch(type, context))
-        } catch {
-            print("❌ Decoding error in NewsService: \(error)")
-            throw APIError.decodingError(error)
-        }
+        let decoder = JSONDecoder()
+        let articles = try decoder.decode([NewsArticle].self, from: data)
+        return articles
     }
 }

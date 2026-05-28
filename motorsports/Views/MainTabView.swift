@@ -5,10 +5,11 @@ import SwiftUI
 
 struct MainTabView: View {
     @EnvironmentObject var racingDataService: RacingDataService
+    @EnvironmentObject var authVM: AuthenticationViewModel
     @State private var selectedTab: Tab = .home
 
     enum Tab {
-        case home, watch, updates, standings, settings
+        case home, watch, standings, fantasy, updates
     }
 
     var body: some View {
@@ -26,24 +27,29 @@ struct MainTabView: View {
                 }
                 .tag(Tab.watch)
 
+            StandingsView()
+                .tabItem {
+                    Label("Calendar", systemImage: "calendar")
+                }
+                .tag(Tab.standings)
+
+            Group {
+                if authVM.isAuthenticated {
+                    FantasyDashboardView()
+                } else {
+                    AuthenticationView()
+                }
+            }
+                .tabItem {
+                    Label("Market", systemImage: "building.columns.fill")
+                }
+                .tag(Tab.fantasy)
+
             UpdatesFeedView()
                 .tabItem {
                     Label("Feed", systemImage: "bubble.left")
                 }
                 .tag(Tab.updates)
-
-            StandingsView()
-                .tabItem {
-                    Label("Standings", systemImage: "star.fill")
-                }
-                .tag(Tab.standings)
-
-            SettingsView()
-                .tabItem {
-                    Label("Settings", systemImage: "gearshape.fill")
-                }
-                .tag(Tab.settings)
-
         }
         .accentColor(.racingRed)
         .preferredColorScheme(.dark)

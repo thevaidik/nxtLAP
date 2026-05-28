@@ -13,7 +13,16 @@ class CommViewModel: ObservableObject {
     @Published var replies: [String: [CommReply]] = [:]
     @Published var isFetchingReplies = false
 
+    @Published var channels: [CommChannel] = []
+
     private let service = CommService()
+
+    init() {
+        if let cached = UserDefaults.standard.data(forKey: "cached_comm_channels"),
+           let decoded = try? JSONDecoder().decode([CommChannel].self, from: cached) {
+            self.channels = decoded
+        }
+    }
 
     /// Persistent device ID used as userId for reactions.
     /// Generated once on first launch and stored in UserDefaults.
@@ -24,6 +33,14 @@ class CommViewModel: ObservableObject {
         let newId = UUID().uuidString
         UserDefaults.standard.set(newId, forKey: "deviceId")
         return newId
+    }
+
+    func fetchChannels() async {
+        do {
+            channels = try await service.fetchChannels()
+        } catch {
+            print("❌ fetchChannels failed: \(error)")
+        }
     }
 
     func fetchMessages() async {

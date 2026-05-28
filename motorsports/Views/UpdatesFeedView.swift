@@ -17,7 +17,7 @@ struct UpdatesFeedView: View {
 
             HStack(spacing: 0) {
                 // ── Left Sidebar Navigation ──────────────────────────────────
-                ServerSidebarView(activeSelection: $activeSidebarSelection)
+                ServerSidebarView(activeSelection: $activeSidebarSelection, channels: viewModel.channels)
 
                 // ── Main Chat Feed Panel ─────────────────────────────────────
                 VStack(spacing: 0) {
@@ -46,7 +46,9 @@ struct UpdatesFeedView: View {
         }
         .navigationBarHidden(true) // We use our own high-fidelity custom header
         .task {
-            await viewModel.fetchMessages()
+            async let fetchC: () = viewModel.fetchChannels()
+            async let fetchM: () = viewModel.fetchMessages()
+            _ = await (fetchC, fetchM)
         }
     }
 
@@ -140,11 +142,7 @@ struct UpdatesFeedView: View {
                 }
             }
             .onAppear {
-                if activeSidebarSelection == "new" {
-                    proxy.scrollTo("new_feed_bottom", anchor: .bottom)
-                } else if let lastMessageId = filteredMessages.last?.id {
-                    proxy.scrollTo(lastMessageId, anchor: .bottom)
-                }
+                // Feed defaults to the top naturally, which now holds the newest messages.
             }
         }
     }
@@ -249,28 +247,34 @@ struct UpdatesFeedView: View {
         let messages: [CommMessage]
     }
 
+    private var currentChannel: CommChannel? {
+        viewModel.channels.first(where: { $0.id == activeSidebarSelection })
+    }
+
     private var channelTitle: String {
-        switch activeSidebarSelection {
-        case "general": return "General"
-        case "new": return "Updates New"
-        default: return "General"
-        }
+        currentChannel?.title ?? "General"
     }
 
     private var channelSubtitle: String {
-        switch activeSidebarSelection {
-        case "general": return "Automated Telemetry Bot Feed"
-        case "new": return "App Telemetry Alerts Bot"
-        default: return "Real-time updates"
-        }
+        currentChannel?.subtitle ?? "Real-time updates"
     }
 
     private var filteredMessages: [CommMessage] {
         let baseMessages: [CommMessage]
+        
         if activeSidebarSelection == "new" {
-            baseMessages = clientMessages
+            baseMessages = clientMessages.sorted { $0.timestamp > $1.timestamp }
         } else {
-            baseMessages = viewModel.messages
+            var msgs = viewModel.messages
+            
+            if let f = currentChannel?.filterBotName {
+                msgs = msgs.filter { $0.botName == f }
+            }
+            if let e = currentChannel?.excludeBotName {
+                msgs = msgs.filter { $0.botName != e }
+            }
+            
+            baseMessages = msgs.sorted { $0.timestamp > $1.timestamp }
         }
         
         return baseMessages.map { msg in
@@ -395,10 +399,11 @@ struct UpdatesFeedView: View {
 
 struct ServerSidebarView: View {
     @Binding var activeSelection: String
+    let channels: [CommChannel]
 
     var body: some View {
         VStack(spacing: 16) {
-            // 1. Small static App Logo Emblem (Using the official NxtLAP logo image!)
+            // 1. Small static App Logo Emblem
             Image("AppLogo")
                 .resizable()
                 .scaledToFit()
@@ -411,49 +416,28 @@ struct ServerSidebarView: View {
                 .frame(height: 1)
                 .padding(.horizontal, 12)
             
-            // 2. NxtLAP Channel Logo (Opens Default "General" Bot Channel!)
-            // Highlighted active state gets a beautiful RED SQUARE border around its logo, but the inside does not change fill color!
-            Button {
-                HapticManager.shared.selection()
-                withAnimation(.spring) { activeSelection = "general" }
-            } label: {
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(Color.white.opacity(0.06))
-                    .frame(width: 44, height: 44)
-                    .overlay(
-                        Text("G")
-                            .font(.system(size: 20, weight: .black))
-                            .foregroundColor(activeSelection == "general" ? .white : .gray)
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 10)
-                            .stroke(activeSelection == "general" ? Color.racingRed : Color.clear, lineWidth: 2)
-                            .shadow(color: activeSelection == "general" ? Color.racingRed.opacity(0.5) : Color.clear, radius: 4)
-                    )
+            // Render Dynamic Server Channels
+            ForEach(channels) { channel in
+                Button {
+                    HapticManager.shared.selection()
+                    withAnimation(.spring) { activeSelection = channel.id }
+                } label: {
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(Color.white.opacity(0.06))
+                        .frame(width: 44, height: 44)
+                        .overlay(
+                            Text(channel.shortName)
+                                .font(.system(size: channel.shortName.count > 2 ? 10 : 16, weight: .black))
+                                .foregroundColor(activeSelection == channel.id ? .white : .gray)
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10)
+                                .stroke(activeSelection == channel.id ? Color.racingRed : Color.clear, lineWidth: 2)
+                                .shadow(color: activeSelection == channel.id ? Color.racingRed.opacity(0.5) : Color.clear, radius: 4)
+                        )
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
-
-            // 3. "Updates New" Channel Button
-            // Highlighted active state gets a beautiful RED SQUARE border around its logo, but the inside does not change fill color!
-            Button {
-                HapticManager.shared.selection()
-                withAnimation(.spring) { activeSelection = "new" }
-            } label: {
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(Color.white.opacity(0.06))
-                    .frame(width: 44, height: 44)
-                    .overlay(
-                        Text("NEW")
-                            .font(.system(size: 10, weight: .black))
-                            .foregroundColor(activeSelection == "new" ? .white : .gray)
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 10)
-                            .stroke(activeSelection == "new" ? Color.racingRed : Color.clear, lineWidth: 2)
-                            .shadow(color: activeSelection == "new" ? Color.racingRed.opacity(0.5) : Color.clear, radius: 4)
-                    )
-            }
-            .buttonStyle(.plain)
             
             Spacer()
             

@@ -21,6 +21,7 @@ struct motorsportsApp: App {
     @StateObject private var livestreamViewModel = LivestreamViewModel()
     @StateObject private var newsViewModel = NewsViewModel()
     @StateObject private var notificationManager = NotificationManager.shared
+    @StateObject private var fantasyViewModel = FantasyViewModel()
     
     init() {
         configureAudioSession()
@@ -46,6 +47,7 @@ struct motorsportsApp: App {
                 .environmentObject(livestreamViewModel)
                 .environmentObject(newsViewModel)
                 .environmentObject(notificationManager)
+                .environmentObject(fantasyViewModel)
                 .fontWidth(Font.Width(0.1))
                 .onChange(of: scenePhase) {
                     if scenePhase == .active {

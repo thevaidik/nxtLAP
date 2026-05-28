@@ -7,6 +7,31 @@ class CommService {
     private let baseURL = "https://nuned3r3w7.execute-api.us-east-1.amazonaws.com"
     private let session = URLSession.shared
     private let cacheKey = "cached_comm_messages"
+    private let channelsCacheKey = "cached_comm_channels"
+
+    func fetchChannels() async throws -> [CommChannel] {
+        guard let url = URL(string: "\(baseURL)/updates/channels") else {
+            throw URLError(.badURL)
+        }
+        
+        do {
+            let (data, response) = try await session.data(from: url)
+            if let http = response as? HTTPURLResponse, http.statusCode != 200 {
+                throw APIError.httpError(http.statusCode)
+            }
+            
+            let decoder = JSONDecoder()
+            let channels = try decoder.decode([CommChannel].self, from: data)
+            UserDefaults.standard.set(data, forKey: channelsCacheKey)
+            return channels
+        } catch {
+            if let cached = UserDefaults.standard.data(forKey: channelsCacheKey),
+               let channels = try? JSONDecoder().decode([CommChannel].self, from: cached) {
+                return channels
+            }
+            throw error
+        }
+    }
 
     func fetchMessages(limit: Int = 50) async throws -> [CommMessage] {
         guard let url = URL(string: "\(baseURL)/updates/messages?limit=\(limit)") else {

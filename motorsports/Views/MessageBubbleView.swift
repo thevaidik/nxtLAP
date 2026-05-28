@@ -24,10 +24,6 @@ struct MessageBubbleView: View {
                             Circle()
                                 .stroke(Color.white.opacity(0.15), lineWidth: 1)
                         )
-                    
-                    Image(systemName: avatarIcon)
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(.white)
                 }
                 .frame(width: 36, height: 36)
 
@@ -44,7 +40,7 @@ struct MessageBubbleView: View {
                     }
 
                     // Message content
-                    Text(message.content)
+                    Text(localizedContent)
                         .font(.system(size: 14))
                         .foregroundColor(.white.opacity(0.95))
                         .lineSpacing(4)
@@ -130,48 +126,52 @@ struct MessageBubbleView: View {
 
     // ── Helper Styling computed properties ───────────────────────────────────
 
+    private var localizedContent: String {
+        var text = message.content
+        guard let regex = try? NSRegularExpression(pattern: "<t:([^>]+)>", options: []) else {
+            return text
+        }
+        
+        let nsString = text as NSString
+        let matches = regex.matches(in: text, options: [], range: NSRange(location: 0, length: nsString.length))
+        
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        
+        let formatterWithFractional = ISO8601DateFormatter()
+        formatterWithFractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        
+        let displayFormatter = DateFormatter()
+        displayFormatter.dateStyle = .none
+        displayFormatter.timeStyle = .short
+        
+        for match in matches.reversed() {
+            let matchRange = match.range
+            let dateRange = match.range(at: 1)
+            let dateStr = nsString.substring(with: dateRange)
+            
+            if let date = formatter.date(from: dateStr) ?? formatterWithFractional.date(from: dateStr) {
+                let localTime = displayFormatter.string(from: date)
+                text = (text as NSString).replacingCharacters(in: matchRange, with: "at \(localTime)")
+            } else {
+                text = (text as NSString).replacingCharacters(in: matchRange, with: "at \(dateStr)")
+            }
+        }
+        
+        return text
+    }
+
     private var avatarGradient: LinearGradient {
         if message.botName == "@nxt_10min" {
             return LinearGradient(colors: [Color.purple, Color.pink], startPoint: .topLeading, endPoint: .bottomTrailing)
         }
         
-        switch message.parsedDetails.series {
-        case "formula1":
-            return LinearGradient(colors: [Color.red, Color(red: 0.1, green: 0.1, blue: 0.3)], startPoint: .topLeading, endPoint: .bottomTrailing)
-        case "motogp":
-            return LinearGradient(colors: [Color.orange, Color.red], startPoint: .topLeading, endPoint: .bottomTrailing)
-        case "nascar":
-            return LinearGradient(colors: [Color.blue, Color.yellow], startPoint: .topLeading, endPoint: .bottomTrailing)
-        case "formulae":
-            return LinearGradient(colors: [Color.purple, Color.cyan], startPoint: .topLeading, endPoint: .bottomTrailing)
-        default:
-            return LinearGradient(colors: [Color.racingRed, Color(red: 0.15, green: 0.15, blue: 0.15)], startPoint: .topLeading, endPoint: .bottomTrailing)
-        }
-    }
-
-    private var avatarIcon: String {
-        if message.botName == "@nxt_10min" {
-            return "clock.fill"
+        if message.botName == "@nxt_live" {
+            // A vibrant cyan/blue/green gradient for live updates
+            return LinearGradient(colors: [Color.cyan, Color.blue], startPoint: .topLeading, endPoint: .bottomTrailing)
         }
         
-        switch message.parsedDetails.series {
-        case "formula1": return "car.side.fill"
-        case "motogp": return "motorcycle.fill"
-        case "nascar": return "checkerboard.shield"
-        default: return "antenna.radiowaves.left.and.right"
-        }
-    }
-
-    private var avatarColor: Color {
-        if message.botName == "@nxt_10min" {
-            return .pink
-        }
-        
-        switch message.parsedDetails.series {
-        case "formula1": return .red
-        case "motogp": return .orange
-        case "nascar": return .yellow
-        default: return .racingRed
-        }
+        // All generic bots use the primary NxtLAP "race colors" gradient
+        return LinearGradient(colors: [Color.racingRed, Color(red: 0.15, green: 0.15, blue: 0.15)], startPoint: .topLeading, endPoint: .bottomTrailing)
     }
 }

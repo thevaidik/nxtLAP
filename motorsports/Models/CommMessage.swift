@@ -28,6 +28,7 @@ struct CommMessage: Identifiable, Codable, Equatable {
         case dailyBriefing  = "dailyBriefing"
         case twoHourAlert   = "twoHourAlert"
         case tenMinuteAlert = "tenMinuteAlert"
+        case liveEvent      = "live_event"
     }
 
     /// Convenience to get reaction counts as [String: Int] for display
@@ -231,4 +232,14 @@ struct CommReply: Identifiable, Codable, Equatable {
             return formatter.string(from: date)
         }
     }
+}
+
+/// Server-defined channel configuration
+struct CommChannel: Codable, Identifiable, Equatable {
+    let id: String
+    let title: String
+    let subtitle: String
+    let shortName: String
+    let filterBotName: String?
+    let excludeBotName: String?
 }

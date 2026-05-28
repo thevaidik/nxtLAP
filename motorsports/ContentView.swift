@@ -8,8 +8,11 @@
 import SwiftUI
 
 struct ContentView: View {
+    @StateObject private var authVM = AuthenticationViewModel()
+    
     var body: some View {
         MainTabView()
+            .environmentObject(authVM)
             .transition(.opacity)
     }
 }
