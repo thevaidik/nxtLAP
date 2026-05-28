@@ -6,6 +6,7 @@ import SwiftUI
 struct MainTabView: View {
     @EnvironmentObject var racingDataService: RacingDataService
     @EnvironmentObject var authVM: AuthenticationViewModel
+    @EnvironmentObject var userVM: UserViewModel
     @State private var selectedTab: Tab = .home
 
     enum Tab {
@@ -55,6 +56,10 @@ struct MainTabView: View {
         .preferredColorScheme(.dark)
         .onChange(of: selectedTab) {
             HapticManager.shared.selection()
+        }
+        .fullScreenCover(isPresented: $userVM.isNewUser) {
+            UserOnboardingView()
+                .environmentObject(userVM)
         }
     }
 }

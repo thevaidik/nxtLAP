@@ -1,0 +1,2 @@
+import Amplify
+import AWSCognitoAuthPlugin

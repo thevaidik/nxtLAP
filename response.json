@@ -1,0 +1,1 @@
+{"errorType":"lambda_runtime::deserializer::DeserializeError","errorMessage":"failed to deserialize the incoming data into the function's payload type: this function expects a JSON payload from Amazon API Gateway, Amazon Elastic Load Balancer, or AWS Lambda Function URLs, but the data doesn't match any of those services' events\n"}

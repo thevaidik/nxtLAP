@@ -55,15 +55,30 @@ struct CardMarketView: View {
                         .padding(.horizontal)
                         .padding(.top)
                         
-                        // Market Grid
-                        LazyVGrid(columns: columns, spacing: 16) {
-                            ForEach(economyVM.availableCards) { template in
-                                MarketCardView(template: template) {
-                                    economyVM.purchaseCard(template: template)
+                        // Market Grid Grouped by Series
+                        VStack(spacing: 30) {
+                            ForEach(groupedCards, id: \.0) { seriesName, templates in
+                                VStack(alignment: .leading, spacing: 12) {
+                                    Text("\(seriesName) Drivers")
+                                        .font(.system(size: 20, weight: .bold))
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal)
+                                    
+                                    ScrollView(.horizontal, showsIndicators: false) {
+                                        HStack(spacing: 16) {
+                                            ForEach(templates) { template in
+                                                MarketCardView(template: template) {
+                                                    economyVM.purchaseCard(template: template)
+                                                }
+                                                .frame(width: 160) // Fixed width for horizontal scrolling
+                                            }
+                                        }
+                                        .padding(.horizontal)
+                                    }
                                 }
                             }
                         }
-                        .padding(.horizontal)
+                        .padding(.bottom, 30)
                     }
                 }
             }
@@ -71,6 +86,17 @@ struct CardMarketView: View {
         .task {
             await economyVM.fetchMarketCards()
         }
+    }
+    
+    // Group cards by series and sort them so F1 appears first
+    var groupedCards: [(String, [DriverCardTemplate])] {
+        let dict = Dictionary(grouping: economyVM.availableCards, by: { $0.series })
+        let sortedSeries = dict.keys.sorted { (s1, s2) in
+            if s1 == "F1" { return true }
+            if s2 == "F1" { return false }
+            return s1 < s2
+        }
+        return sortedSeries.map { ($0, dict[$0]!) }
     }
 }
 

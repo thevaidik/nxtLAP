@@ -7,6 +7,8 @@
 
 import SwiftUI
 import AVFoundation
+import Amplify
+import AWSCognitoAuthPlugin
 
 class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication, supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {
@@ -22,11 +24,24 @@ struct motorsportsApp: App {
     @StateObject private var newsViewModel = NewsViewModel()
     @StateObject private var notificationManager = NotificationManager.shared
     @StateObject private var fantasyViewModel = FantasyViewModel()
+    @StateObject private var userViewModel = UserViewModel()
     
     init() {
+        configureAmplify()
         configureAudioSession()
         HapticManager.shared.prepare()
         NotificationManager.shared.requestPermission()
+    }
+    
+    private func configureAmplify() {
+        do {
+            Amplify.Logging.logLevel = .verbose
+            try Amplify.add(plugin: AWSCognitoAuthPlugin())
+            try Amplify.configure()
+            print("✅ Amplify configured securely")
+        } catch {
+            print("❌ Failed to initialize Amplify with error \(error)")
+        }
     }
     
     private func configureAudioSession() {
@@ -48,6 +63,7 @@ struct motorsportsApp: App {
                 .environmentObject(newsViewModel)
                 .environmentObject(notificationManager)
                 .environmentObject(fantasyViewModel)
+                .environmentObject(userViewModel)
                 .fontWidth(Font.Width(0.1))
                 .onChange(of: scenePhase) {
                     if scenePhase == .active {

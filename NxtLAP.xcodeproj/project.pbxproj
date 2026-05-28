@@ -14,6 +14,7 @@
 		A119675F2F562190001578E6 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A1CE0EA82E5AB1CB00E29A49 /* WidgetKit.framework */; };
 		A11967602F562190001578E6 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A1CE0EAA2E5AB1CB00E29A49 /* SwiftUI.framework */; };
 		A119676B2F562191001578E6 /* RaceWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A119675E2F562190001578E6 /* RaceWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		A1E18E4B2FC84D0700CDBFD1 /* AWSCognitoAuthPlugin in Frameworks */ = {isa = PBXBuildFile; productRef = A1E18E4A2FC84D0700CDBFD1 /* AWSCognitoAuthPlugin */; };
 		D106053172F6D6ECDD86DA95 /* FantasyCardModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4092186C751E6CA8F371524F /* FantasyCardModels.swift */; };
 		EC6037B5291AD87C7B403345 /* MyGarageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E3CC63C4800F59BC148A0CB /* MyGarageView.swift */; };
 /* End PBXBuildFile section */
@@ -106,6 +107,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A11752D32F991C72003FB3AC /* YouTubePlayerKit in Frameworks */,
+				A1E18E4B2FC84D0700CDBFD1 /* AWSCognitoAuthPlugin in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -221,6 +223,7 @@
 			name = NxtLAP;
 			packageProductDependencies = (
 				A11752D22F991C72003FB3AC /* YouTubePlayerKit */,
+				A1E18E4A2FC84D0700CDBFD1 /* AWSCognitoAuthPlugin */,
 			);
 			productName = motorsports;
 			productReference = A121056D2E216566009A4D77 /* NxtLAP.app */;
@@ -255,6 +258,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				A11752D12F991C72003FB3AC /* XCRemoteSwiftPackageReference "YouTubePlayerKit" */,
+				A1E18E492FC84D0700CDBFD1 /* XCRemoteSwiftPackageReference "amplify-swift" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = A121056E2E216566009A4D77 /* Products */;
@@ -516,6 +520,9 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "NxtLAP Races";
+				"INFOPLIST_KEY_CFBundleURLTypes[0].CFBundleTypeRole" = Editor;
+				"INFOPLIST_KEY_CFBundleURLTypes[0].CFBundleURLName" = nxtlap;
+				"INFOPLIST_KEY_CFBundleURLTypes[0].CFBundleURLSchemes[0]" = nxtlap;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -561,6 +568,9 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "NxtLAP Races";
+				"INFOPLIST_KEY_CFBundleURLTypes[0].CFBundleTypeRole" = Editor;
+				"INFOPLIST_KEY_CFBundleURLTypes[0].CFBundleURLName" = nxtlap;
+				"INFOPLIST_KEY_CFBundleURLTypes[0].CFBundleURLSchemes[0]" = nxtlap;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -633,6 +643,14 @@
 				minimumVersion = 2.0.5;
 			};
 		};
+		A1E18E492FC84D0700CDBFD1 /* XCRemoteSwiftPackageReference "amplify-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/aws-amplify/amplify-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.58.1;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -640,6 +658,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = A11752D12F991C72003FB3AC /* XCRemoteSwiftPackageReference "YouTubePlayerKit" */;
 			productName = YouTubePlayerKit;
+		};
+		A1E18E4A2FC84D0700CDBFD1 /* AWSCognitoAuthPlugin */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1E18E492FC84D0700CDBFD1 /* XCRemoteSwiftPackageReference "amplify-swift" */;
+			productName = AWSCognitoAuthPlugin;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
