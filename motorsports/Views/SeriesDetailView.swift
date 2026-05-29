@@ -19,6 +19,10 @@ struct SeriesDetailView: View {
         seriesRaces.sorted { $0.date < $1.date }
     }
     
+    var pastSeriesRaces: [Race] {
+        dataService.getPastRacesForSeries(series.shortName)
+    }
+    
     private var upcomingMonthRaces: [Race] {
         let now = Date()
         guard let oneMonthFromNow = Calendar.current.date(byAdding: .month, value: 1, to: now) else {
@@ -253,6 +257,32 @@ struct SeriesDetailView: View {
                                 .stroke(Color.white.opacity(0.06), lineWidth: 1)
                         )
                 )
+                
+                // Past Sessions
+                if !pastSeriesRaces.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Past Sessions")
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                            .padding(.horizontal, 14)
+                        
+                        LazyVStack(spacing: 12) {
+                            ForEach(pastSeriesRaces) { race in
+                                SeriesRaceCard(race: race, series: series)
+                            }
+                        }
+                        .padding(.horizontal, 14)
+                    }
+                    .padding(.vertical, 12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(Color(.systemGray6))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .stroke(Color.white.opacity(0.06), lineWidth: 1)
+                            )
+                    )
+                }
             }
             .padding(12)
         }

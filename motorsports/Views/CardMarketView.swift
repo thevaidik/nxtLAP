@@ -8,7 +8,20 @@
 import SwiftUI
 
 struct CardMarketView: View {
-    @StateObject var economyVM = FantasyEconomyViewModel()
+    @EnvironmentObject var fantasyVM: FantasyViewModel
+    @EnvironmentObject var dataService: RacingDataService
+    
+    // Dev Mode State
+    @State private var showDevAlert = false
+    @State private var devPasswordInput = ""
+    @State private var devBalanceInput = ""
+    
+    // Purchase Feedback State
+    @State private var showPurchaseSuccess = false
+    @State private var showInsufficientAlert = false
+    
+    // Rules Sheet State
+    @State private var showRulesSheet = false
     
     // Columns for grid
     let columns = [
@@ -29,17 +42,31 @@ struct CardMarketView: View {
                                 Text("Card Market")
                                     .font(.system(size: 28, weight: .bold))
                                     .foregroundColor(.white)
+                                    .lineLimit(1)
                                 Text("Invest in drivers to earn Nxt")
                                     .font(.subheadline)
                                     .foregroundColor(.gray)
                             }
                             Spacer()
                             
+                            // Rules Button
+                            Button(action: {
+                                showRulesSheet = true
+                            }) {
+                                Text("Rules")
+                                    .font(.system(size: 14, weight: .bold))
+                                    .foregroundColor(.gray)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 6)
+                                    .background(Color.white.opacity(0.1))
+                                    .cornerRadius(12)
+                            }
+                            
                             // Wallet Balance
                             HStack(spacing: 4) {
                                 Image(systemName: "n.circle.fill")
                                     .foregroundColor(.cyan)
-                                Text("\(economyVM.nxtBalance)")
+                                Text("\(fantasyVM.coins)")
                                     .font(.system(size: 16, weight: .bold))
                                     .foregroundColor(.white)
                             }
@@ -51,46 +78,116 @@ struct CardMarketView: View {
                                 RoundedRectangle(cornerRadius: 12)
                                     .stroke(Color.white.opacity(0.1), lineWidth: 1)
                             )
+                            .onTapGesture(count: 5) {
+                                if dataService.isDevMode {
+                                    showDevAlert = true
+                                    HapticManager.shared.trigger(.heavy)
+                                }
+                            }
                         }
                         .padding(.horizontal)
                         .padding(.top)
                         
                         // Market Grid Grouped by Series
-                        VStack(spacing: 30) {
-                            ForEach(groupedCards, id: \.0) { seriesName, templates in
-                                VStack(alignment: .leading, spacing: 12) {
-                                    Text("\(seriesName) Drivers")
-                                        .font(.system(size: 20, weight: .bold))
-                                        .foregroundColor(.white)
-                                        .padding(.horizontal)
-                                    
-                                    ScrollView(.horizontal, showsIndicators: false) {
-                                        HStack(spacing: 16) {
-                                            ForEach(templates) { template in
-                                                MarketCardView(template: template) {
-                                                    economyVM.purchaseCard(template: template)
+                        if !fantasyVM.hasSuccessfullyFetchedCloudState {
+                            VStack(spacing: 20) {
+                                Spacer().frame(height: 100)
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .cyan))
+                                    .scaleEffect(1.5)
+                                Text("Syncing Garage...")
+                                    .font(.headline)
+                                    .foregroundColor(.gray)
+                                Spacer()
+                            }
+                        } else {
+                            VStack(spacing: 30) {
+                                ForEach(groupedCards, id: \.0) { seriesName, templates in
+                                    VStack(alignment: .leading, spacing: 12) {
+                                        Text("\(seriesName) Drivers")
+                                            .font(.system(size: 20, weight: .bold))
+                                            .foregroundColor(.white)
+                                            .padding(.horizontal)
+                                        
+                                        ScrollView(.horizontal, showsIndicators: false) {
+                                            HStack(spacing: 16) {
+                                                ForEach(templates) { template in
+                                                    let isOwned = fantasyVM.myGarage.contains { $0.template.id == template.id }
+                                                    MarketCardView(
+                                                        template: template,
+                                                        isOwned: isOwned
+                                                    ) {
+                                                        if fantasyVM.coins >= template.basePriceNxt {
+                                                            fantasyVM.purchaseCard(template: template)
+                                                            HapticManager.shared.trigger(.medium) // Should be .heavy for success? Wait, I will use .light or medium
+                                                            showPurchaseSuccess = true
+                                                        } else {
+                                                            HapticManager.shared.trigger(.heavy)
+                                                            showInsufficientAlert = true
+                                                        }
+                                                    }
+                                                    .frame(width: 160) // Fixed width for horizontal scrolling
                                                 }
-                                                .frame(width: 160) // Fixed width for horizontal scrolling
                                             }
+                                            .padding(.horizontal)
                                         }
-                                        .padding(.horizontal)
                                     }
                                 }
                             }
+                            .padding(.bottom, 120)
                         }
-                        .padding(.bottom, 30)
                     }
                 }
             }
         }
         .task {
-            await economyVM.fetchMarketCards()
+            await fantasyVM.fetchMarketCards()
+        }
+        .alert("Dev Actions", isPresented: $showDevAlert) {
+            SecureField("Password", text: $devPasswordInput)
+                .keyboardType(.numberPad)
+            TextField("New Nxt Balance", text: $devBalanceInput)
+                .keyboardType(.numberPad)
+            
+            Button("Set Balance") {
+                if devPasswordInput == "1100", let newBal = Int(devBalanceInput) {
+                    fantasyVM.setDevBalance(newBal)
+                }
+                devPasswordInput = ""
+                devBalanceInput = ""
+            }
+            
+            Button("Reset Daily Bonus") {
+                fantasyVM.resetDailyBonus()
+                devPasswordInput = ""
+                devBalanceInput = ""
+            }
+            
+            Button("Cancel", role: .cancel) {
+                devPasswordInput = ""
+                devBalanceInput = ""
+            }
+        } message: {
+            Text("Enter pass (1100) to set balance.")
+        }
+        .alert("Insufficient Nxt", isPresented: $showInsufficientAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text("You don't have enough Nxt to buy this card! Come back tomorrow for your daily bonus.")
+        }
+        .alert("Card Purchased!", isPresented: $showPurchaseSuccess) {
+            Button("Awesome", role: .cancel) { }
+        } message: {
+            Text("This driver is now in your Garage! They will passively generate Nxt for you after every race.")
+        }
+        .sheet(isPresented: $showRulesSheet) {
+            FantasyRulesSheet()
         }
     }
     
     // Group cards by series and sort them so F1 appears first
     var groupedCards: [(String, [DriverCardTemplate])] {
-        let dict = Dictionary(grouping: economyVM.availableCards, by: { $0.series })
+        let dict = Dictionary(grouping: fantasyVM.availableCards, by: { $0.series })
         let sortedSeries = dict.keys.sorted { (s1, s2) in
             if s1 == "F1" { return true }
             if s2 == "F1" { return false }
@@ -102,6 +199,7 @@ struct CardMarketView: View {
 
 struct MarketCardView: View {
     let template: DriverCardTemplate
+    let isOwned: Bool
     let onBuy: () -> Void
     
     var body: some View {
@@ -161,17 +259,28 @@ struct MarketCardView: View {
                     .foregroundColor(.gray)
                     .lineLimit(1)
                 
-                Button(action: onBuy) {
+                Button(action: {
+                    if !isOwned { onBuy() }
+                }) {
                     HStack(spacing: 4) {
-                        Image(systemName: "n.circle.fill")
-                            .font(.system(size: 13, weight: .bold))
-                        Text("\(template.basePriceNxt)")
-                            .font(.system(size: 13, weight: .bold))
+                        if isOwned {
+                            Image(systemName: "checkmark.seal.fill")
+                                .font(.system(size: 13, weight: .bold))
+                            Text("BOUGHT")
+                                .font(.system(size: 13, weight: .bold))
+                                .tracking(1)
+                        } else {
+                            Image(systemName: "n.circle.fill")
+                                .font(.system(size: 13, weight: .bold))
+                            Text("\(template.basePriceNxt)")
+                                .font(.system(size: 13, weight: .bold))
+                        }
                     }
-                    .foregroundColor(.black)
+                    .foregroundColor(isOwned ? .white : .black)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 8)
                     .background(
+                        isOwned ? LinearGradient(colors: [.gray, .gray.opacity(0.8)], startPoint: .leading, endPoint: .trailing) :
                         LinearGradient(
                             colors: [.green, .cyan],
                             startPoint: .leading,
@@ -180,6 +289,7 @@ struct MarketCardView: View {
                     )
                     .cornerRadius(10)
                 }
+                .disabled(isOwned)
                 .padding(.top, 4)
             }
             .padding(12)

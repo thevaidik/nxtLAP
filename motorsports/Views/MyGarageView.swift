@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct MyGarageView: View {
-    @StateObject var economyVM = FantasyEconomyViewModel()
+    @EnvironmentObject var fantasyVM: FantasyViewModel
     
     var body: some View {
         NavigationStack {
@@ -25,12 +25,32 @@ struct MyGarageView: View {
                         
                         // Stats Overview
                         HStack(spacing: 16) {
-                            StatBox(title: "Total Cards", value: "\(economyVM.myGarage.count)", icon: "square.stack.3d.up.fill", color: .purple)
+                            StatBox(title: "Total Cards", value: "\(fantasyVM.myGarage.count)", icon: "square.stack.3d.up.fill", color: .purple)
                             
-                            let totalYield = economyVM.myGarage.reduce(0) { $0 + $1.totalYieldNxt }
+                            let totalYield = fantasyVM.myGarage.reduce(0) { $0 + $1.totalYieldNxt }
                             StatBox(title: "Lifetime Yield", value: "\(totalYield)", icon: "chart.line.uptrend.xyaxis", color: .green)
                         }
                         .padding(.horizontal)
+                        
+                        // Active Draft Picks
+                        if fantasyVM.draftLocked {
+                            VStack(alignment: .leading, spacing: 10) {
+                                Text("Active Weekly Draft")
+                                    .font(.title3.bold())
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal)
+                                    .padding(.top, 10)
+                                
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 12) {
+                                        ForEach(fantasyVM.weeklyDraftPicks.compactMap({ $0 }), id: \.id) { pick in
+                                            DraftMiniCard(driver: pick)
+                                        }
+                                    }
+                                    .padding(.horizontal)
+                                }
+                            }
+                        }
                         
                         Text("Your Driver Portfolio")
                             .font(.title3.bold())
@@ -40,11 +60,11 @@ struct MyGarageView: View {
                         
                         // Inventory List
                         VStack(spacing: 12) {
-                            ForEach(economyVM.myGarage) { card in
+                            ForEach(fantasyVM.myGarage) { card in
                                 InventoryCardRow(card: card)
                             }
                             
-                            if economyVM.myGarage.isEmpty {
+                            if fantasyVM.myGarage.isEmpty {
                                 Text("Your garage is empty. Head to the market!")
                                     .foregroundColor(.gray)
                                     .padding(.top, 40)
@@ -167,6 +187,47 @@ struct InventoryCardRow: View {
         .overlay(
             RoundedRectangle(cornerRadius: 16)
                 .stroke(Color(hex: card.tier.colorHex).opacity(0.2), lineWidth: 1)
+        )
+    }
+}
+
+struct DraftMiniCard: View {
+    let driver: DriverCardTemplate
+    
+    var body: some View {
+        VStack(spacing: 8) {
+            if let urlString = driver.cutoutUrl ?? driver.imageUrl, let url = URL(string: urlString) {
+                CachedAsyncImage(url: url) { image in
+                    image
+                        .resizable()
+                        .scaledToFit()
+                } placeholder: {
+                    ProgressView()
+                }
+                .frame(width: 50, height: 50)
+                .background(Color.white.opacity(0.1))
+                .clipShape(Circle())
+            } else {
+                Circle()
+                    .fill(Color.white.opacity(0.1))
+                    .frame(width: 50, height: 50)
+                    .overlay(
+                        Image(systemName: "person.fill")
+                            .foregroundColor(.gray)
+                    )
+            }
+            
+            Text(driver.driverName)
+                .font(.system(size: 11, weight: .bold))
+                .foregroundColor(.white)
+                .lineLimit(1)
+        }
+        .frame(width: 90, height: 110)
+        .background(Color(.systemGray6).opacity(0.3))
+        .cornerRadius(12)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.cyan.opacity(0.4), lineWidth: 1)
         )
     }
 }

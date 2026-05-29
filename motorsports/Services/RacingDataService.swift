@@ -15,6 +15,7 @@ class RacingDataService: ObservableObject {
     @Published var starredSeries: Set<String> = [] // Using shortName as identifier
     @Published var notificationsEnabledSeries: Set<String> = [] // Independent notification toggle
     @Published var upcomingRaces: [Race] = []
+    @Published var pastRaces: [Race] = []
     @Published var isLoadingData = false
     @Published var isDevMode = false
     @Published var apiConnectionStatus: String = "Not tested"
@@ -149,6 +150,10 @@ class RacingDataService: ObservableObject {
                         .filter { Calendar.current.startOfDay(for: $0.date) >= today }
                         .sorted { $0.date < $1.date }
                     
+                    pastRaces = realRaces
+                        .filter { Calendar.current.startOfDay(for: $0.date) < today }
+                        .sorted { $0.date > $1.date } // Most recent past races first
+                    
                     // Automatically sync race notifications based on explicit preferences
                     NotificationManager.shared.syncRaceNotifications(races: upcomingRaces, enabledSeries: notificationsEnabledSeries)
                     
@@ -230,8 +235,16 @@ class RacingDataService: ObservableObject {
         upcomingRaces.filter { starredSeries.contains($0.series) }
     }
     
+    var pastRacesForStarredSeries: [Race] {
+        pastRaces.filter { starredSeries.contains($0.series) }
+    }
+    
     func getRacesForSeries(_ seriesShortName: String) -> [Race] {
         upcomingRaces.filter { $0.series == seriesShortName }
+    }
+    
+    func getPastRacesForSeries(_ seriesShortName: String) -> [Race] {
+        pastRaces.filter { $0.series == seriesShortName }
     }
     
     func refreshData() async {

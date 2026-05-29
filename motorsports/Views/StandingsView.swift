@@ -11,6 +11,7 @@ struct StandingsView: View {
     enum CalendarWeekSegment: String, CaseIterable {
         case thisWeek = "This week"
         case nextWeek = "Next week"
+        case past = "Past"
     }
     
     @State private var weekSegment: CalendarWeekSegment = .thisWeek
@@ -65,6 +66,44 @@ struct StandingsView: View {
         }
     }
     
+    private var pastWeekendGroups: [WeekendGroup] {
+        let allPast = dataService.pastRacesForStarredSeries
+        guard !allPast.isEmpty else { return [] }
+        
+        var groups: [String: [Race]] = [:]
+        for race in allPast {
+            let venueKey: String
+            if let circuit = race.circuit, !circuit.isEmpty {
+                venueKey = circuit
+            } else {
+                let words = race.name.components(separatedBy: " ")
+                venueKey = words.prefix(2).joined(separator: " ")
+            }
+            let key = "\(race.series)_\(venueKey)"
+            groups[key, default: []].append(race)
+        }
+        
+        let mapped = groups.compactMap { _, sessions -> WeekendGroup? in
+            let sortedSessions = sessions.sorted { $0.date > $1.date } // sort descending
+            guard let lastForTitle = sortedSessions.last,
+                  let firstForMeta = sortedSessions.first else { return nil }
+            let components = lastForTitle.name.components(separatedBy: " - ")
+            let displayName = components.first ?? lastForTitle.name
+            return WeekendGroup(
+                weekendName: displayName,
+                location: firstForMeta.location,
+                sessions: sortedSessions,
+                series: firstForMeta.series
+            )
+        }
+        
+        return mapped.sorted {
+            let d1 = $0.sessions.first?.date ?? Date.distantPast
+            let d2 = $1.sessions.first?.date ?? Date.distantPast
+            return d1 > d2 // most recent past races first
+        }
+    }
+    
     private var thisWeekGroups: [WeekendGroup] {
         upcomingWeekendGroups.filter { g in
             guard let start = g.sessions.map(\.date).min() else { return false }
@@ -83,6 +122,7 @@ struct StandingsView: View {
         switch weekSegment {
         case .thisWeek: return thisWeekGroups
         case .nextWeek: return nextWeekGroups
+        case .past: return pastWeekendGroups
         }
     }
     
@@ -239,7 +279,7 @@ struct StandingsView: View {
                     .padding(.top, 8)
             }
             
-            if thisWeekGroups.isEmpty && nextWeekGroups.isEmpty && !upcomingWeekendGroups.isEmpty {
+            if thisWeekGroups.isEmpty && nextWeekGroups.isEmpty && !upcomingWeekendGroups.isEmpty && weekSegment != .past {
                 Text("no races - but these are upcoming later")
                     .font(.subheadline)
                     .foregroundColor(.gray)
@@ -247,7 +287,7 @@ struct StandingsView: View {
                     .padding(.horizontal, 24)
             }
             
-            if !upcomingWeekendGroups.isEmpty && (!thisWeekGroups.isEmpty || !nextWeekGroups.isEmpty) {
+            if (!upcomingWeekendGroups.isEmpty || !pastWeekendGroups.isEmpty) && (!thisWeekGroups.isEmpty || !nextWeekGroups.isEmpty || !pastWeekendGroups.isEmpty) {
                 CustomSegmentedControl(selection: $weekSegment, options: CalendarWeekSegment.allCases)
                     .padding(.horizontal, 20)
                     .padding(.bottom, 12)
@@ -263,13 +303,21 @@ struct StandingsView: View {
                     }
                 }
                 .padding(.horizontal, 20)
-            } else if !thisWeekGroups.isEmpty || !nextWeekGroups.isEmpty {
-                Text(weekSegment == .thisWeek ? "No races this week." : "No races next week.")
+            } else if (!thisWeekGroups.isEmpty || !nextWeekGroups.isEmpty || !pastWeekendGroups.isEmpty) {
+                Text(emptyText(for: weekSegment))
                     .font(.subheadline)
                     .foregroundColor(.gray)
                     .frame(maxWidth: .infinity)
                     .padding(.top, 8)
             }
+        }
+    }
+    
+    private func emptyText(for segment: CalendarWeekSegment) -> String {
+        switch segment {
+        case .thisWeek: return "No races this week."
+        case .nextWeek: return "No races next week."
+        case .past: return "No past races yet."
         }
     }
 }

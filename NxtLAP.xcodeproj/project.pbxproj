@@ -8,8 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		267A79773E8FE0777AD164E7 /* FantasyDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 497EB4240A7D3ACC2FFEF6D5 /* FantasyDashboardView.swift */; };
-		67A543791C7939CE375AE895 /* FantasyEconomyViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC91CA75491852F64DCBA616 /* FantasyEconomyViewModel.swift */; };
 		9F8884DD93CC7A7DC1B5409C /* CardMarketView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 069FCB60E9B23091EED1DA70 /* CardMarketView.swift */; };
+		A0A08F889A354E9B10E96E5D /* SidebarProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 571A0722770BDC28C9ACCE5F /* SidebarProfileView.swift */; };
 		A11752D32F991C72003FB3AC /* YouTubePlayerKit in Frameworks */ = {isa = PBXBuildFile; productRef = A11752D22F991C72003FB3AC /* YouTubePlayerKit */; };
 		A119675F2F562190001578E6 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A1CE0EA82E5AB1CB00E29A49 /* WidgetKit.framework */; };
 		A11967602F562190001578E6 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A1CE0EAA2E5AB1CB00E29A49 /* SwiftUI.framework */; };
@@ -47,13 +47,13 @@
 		069FCB60E9B23091EED1DA70 /* CardMarketView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CardMarketView.swift; sourceTree = "<group>"; };
 		4092186C751E6CA8F371524F /* FantasyCardModels.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FantasyCardModels.swift; sourceTree = "<group>"; };
 		497EB4240A7D3ACC2FFEF6D5 /* FantasyDashboardView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FantasyDashboardView.swift; sourceTree = "<group>"; };
+		571A0722770BDC28C9ACCE5F /* SidebarProfileView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SidebarProfileView.swift; sourceTree = "<group>"; };
 		9E3CC63C4800F59BC148A0CB /* MyGarageView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MyGarageView.swift; sourceTree = "<group>"; };
 		A119675E2F562190001578E6 /* RaceWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = RaceWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		A121056D2E216566009A4D77 /* NxtLAP.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NxtLAP.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A127B71D2F5E063600B09A41 /* RaceWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RaceWidgetExtension.entitlements; sourceTree = "<group>"; };
 		A1CE0EA82E5AB1CB00E29A49 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		A1CE0EAA2E5AB1CB00E29A49 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
-		CC91CA75491852F64DCBA616 /* FantasyEconomyViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FantasyEconomyViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -125,7 +125,6 @@
 		102E399B4C636972E7FB9357 /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
-				CC91CA75491852F64DCBA616 /* FantasyEconomyViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -176,6 +175,7 @@
 				497EB4240A7D3ACC2FFEF6D5 /* FantasyDashboardView.swift */,
 				069FCB60E9B23091EED1DA70 /* CardMarketView.swift */,
 				9E3CC63C4800F59BC148A0CB /* MyGarageView.swift */,
+				571A0722770BDC28C9ACCE5F /* SidebarProfileView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -301,10 +301,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				D106053172F6D6ECDD86DA95 /* FantasyCardModels.swift in Sources */,
-				67A543791C7939CE375AE895 /* FantasyEconomyViewModel.swift in Sources */,
 				267A79773E8FE0777AD164E7 /* FantasyDashboardView.swift in Sources */,
 				9F8884DD93CC7A7DC1B5409C /* CardMarketView.swift in Sources */,
 				EC6037B5291AD87C7B403345 /* MyGarageView.swift in Sources */,
+				A0A08F889A354E9B10E96E5D /* SidebarProfileView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -326,7 +326,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_ENTITLEMENTS = RaceWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 15;
+				CURRENT_PROJECT_VERSION = 17;
 				DEVELOPMENT_TEAM = 7RWMCRQ389;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = RaceWidget/Info.plist;
@@ -359,7 +359,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_ENTITLEMENTS = RaceWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 15;
+				CURRENT_PROJECT_VERSION = 17;
 				DEVELOPMENT_TEAM = 7RWMCRQ389;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = RaceWidget/Info.plist;
@@ -513,16 +513,13 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = motorsports/motorsports.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 15;
+				CURRENT_PROJECT_VERSION = 17;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 7RWMCRQ389;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "NxtLAP Races";
-				"INFOPLIST_KEY_CFBundleURLTypes[0].CFBundleTypeRole" = Editor;
-				"INFOPLIST_KEY_CFBundleURLTypes[0].CFBundleURLName" = nxtlap;
-				"INFOPLIST_KEY_CFBundleURLTypes[0].CFBundleURLSchemes[0]" = nxtlap;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -538,7 +535,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.5;
-				MARKETING_VERSION = 1.6;
+				MARKETING_VERSION = 1.6.2;
 				PRODUCT_BUNDLE_IDENTIFIER = vaidik.motorsports;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -561,16 +558,13 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = motorsports/motorsports.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 15;
+				CURRENT_PROJECT_VERSION = 17;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 7RWMCRQ389;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "NxtLAP Races";
-				"INFOPLIST_KEY_CFBundleURLTypes[0].CFBundleTypeRole" = Editor;
-				"INFOPLIST_KEY_CFBundleURLTypes[0].CFBundleURLName" = nxtlap;
-				"INFOPLIST_KEY_CFBundleURLTypes[0].CFBundleURLSchemes[0]" = nxtlap;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -586,7 +580,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.5;
-				MARKETING_VERSION = 1.6;
+				MARKETING_VERSION = 1.6.2;
 				PRODUCT_BUNDLE_IDENTIFIER = vaidik.motorsports;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;

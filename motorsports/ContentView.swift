@@ -11,6 +11,7 @@ import Amplify
 struct ContentView: View {
     @StateObject private var authVM = AuthenticationViewModel()
     @EnvironmentObject var userVM: UserViewModel
+    @EnvironmentObject var fantasyViewModel: FantasyViewModel
     
     var body: some View {
         MainTabView()
@@ -23,9 +24,23 @@ struct ContentView: View {
                 if authVM.isAuthenticated {
                     Task {
                         await userVM.fetchProfile()
+                        await fantasyViewModel.fetchStateFromCloud()
+                        fantasyViewModel.checkDailyBonusEligibility()
                     }
+                } else {
+                    fantasyViewModel.clearState()
                 }
             }
+            .overlay(
+                Group {
+                    if fantasyViewModel.showDailyBonusClaim {
+                        DailyBonusClaimView()
+                            .environmentObject(fantasyViewModel)
+                            .transition(.opacity.combined(with: .scale))
+                            .zIndex(100)
+                    }
+                }
+            )
     }
 }
 

@@ -39,8 +39,8 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
         do {
             let (data, _) = try await URLSession.shared.data(from: url)
             if let downloadedImage = UIImage(data: data) {
-                // Save to Cache
-                await ImageCache.shared.insertImage(downloadedImage, for: urlString)
+                // Save to Cache (Passing raw data avoids memory spike)
+                await ImageCache.shared.insertImage(downloadedImage, data: data, for: urlString)
                 
                 await MainActor.run {
                     self.loadedImage = downloadedImage

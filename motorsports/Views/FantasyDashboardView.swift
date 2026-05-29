@@ -37,17 +37,7 @@ struct FantasyDashboardView: View {
             .navigationTitle("Fantasy")
             .navigationBarTitleDisplayMode(.inline)
             .background(Color.black.ignoresSafeArea())
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: {
-                        authVM.signOut()
-                    }) {
-                        Text("Sign Out")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundColor(.red)
-                    }
-                }
-            }
+
         }
     }
 }

@@ -10,6 +10,11 @@ struct HomeView: View {
     @EnvironmentObject var livestreamViewModel: LivestreamViewModel
     @Binding var selectedTab: MainTabView.Tab
     @EnvironmentObject var newsViewModel: NewsViewModel
+    @EnvironmentObject var authVM: AuthenticationViewModel
+    @EnvironmentObject var userVM: UserViewModel
+    
+    @State private var isSidebarShowing = false
+    @State private var isShowingAuthSheet = false
     
     var body: some View {
         NavigationStack {
@@ -28,6 +33,32 @@ struct HomeView: View {
                                     }
                                 
                                 Spacer()
+                                
+                                if authVM.isAuthenticated {
+                                    Button(action: {
+                                        isSidebarShowing = true
+                                    }) {
+                                        Text("@\(userVM.username ?? "Racer")")
+                                            .font(.system(size: 16, weight: .bold))
+                                            .foregroundColor(.white)
+                                            .padding(.horizontal, 12)
+                                            .padding(.vertical, 6)
+                                            .background(Color.white.opacity(0.1))
+                                            .cornerRadius(16)
+                                    }
+                                } else {
+                                    Button(action: {
+                                        isShowingAuthSheet = true
+                                    }) {
+                                        Text("Sign In")
+                                            .font(.system(size: 16, weight: .bold))
+                                            .foregroundColor(.black)
+                                            .padding(.horizontal, 16)
+                                            .padding(.vertical, 8)
+                                            .background(Color.green)
+                                            .cornerRadius(20)
+                                    }
+                                }
                             }
                             .padding(.horizontal, 20)
                             .padding(.top, 20)
@@ -80,6 +111,22 @@ struct HomeView: View {
             }()
             
             _ = await (fetchN, fetchL)
+        }
+        .sheet(isPresented: $isSidebarShowing) {
+            SidebarProfileView(isShowing: $isSidebarShowing)
+                .presentationDetents([.height(350), .medium])
+                .presentationCornerRadius(24)
+        }
+        .sheet(isPresented: $isShowingAuthSheet) {
+            AuthenticationView()
+        }
+        .onChange(of: authVM.isAuthenticated) {
+            if authVM.isAuthenticated {
+                isShowingAuthSheet = false // dismiss auth sheet if successful
+            } else {
+                isSidebarShowing = false // dismiss profile sheet on sign out immediately
+                userVM.username = nil // Reset username state safely
+            }
         }
     }
 }

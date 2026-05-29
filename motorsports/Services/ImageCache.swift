@@ -40,17 +40,15 @@ actor ImageCache {
         return nil
     }
     
-    func insertImage(_ image: UIImage, for urlString: String) {
+    func insertImage(_ image: UIImage, data: Data, for urlString: String) {
         let key = NSString(string: urlString)
         
-        // 1. Save to RAM
+        // 1. Save to RAM (Limit set to 100 images)
         memoryCache.setObject(image, forKey: key)
         
-        // 2. Save to Disk
+        // 2. Save raw downloaded data directly to Disk (Avoids massive memory spike from pngData() compression)
         let fileURL = getFileURL(for: urlString)
-        if let data = image.pngData() {
-            try? data.write(to: fileURL)
-        }
+        try? data.write(to: fileURL)
     }
     
     private func getFileURL(for urlString: String) -> URL {

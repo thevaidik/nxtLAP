@@ -60,29 +60,7 @@ struct AuthenticationView: View {
                             .foregroundColor(.black)
                             .cornerRadius(12)
                         }
-                        
-                        // Sign in with Google Button
-                        Button(action: {
-                            authVM.signInWithGoogle()
-                        }) {
-                            HStack {
-                                Image(systemName: "g.circle.fill")
-                                    .font(.title2)
-                                Text("Sign in with Google")
-                                    .font(.headline)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                            .background(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .fill(Color.white.opacity(0.1))
-                            )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                            )
-                            .foregroundColor(.white)
-                        }
+
                     }
                 }
                 .padding(.horizontal, 32)

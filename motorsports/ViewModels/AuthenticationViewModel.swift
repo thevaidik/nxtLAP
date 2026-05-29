@@ -28,10 +28,7 @@ class AuthenticationViewModel: ObservableObject {
         signInWithProvider(.apple)
     }
     
-    func signInWithGoogle() {
-        signInWithProvider(.google)
-    }
-    
+
     private func signInWithProvider(_ provider: AuthProvider) {
         // Grab the active UIWindow from the application scene
         guard let window = UIApplication.shared.connectedScenes
