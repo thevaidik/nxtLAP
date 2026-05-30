@@ -9,6 +9,7 @@ import SwiftUI
 
 struct MyGarageView: View {
     @EnvironmentObject var fantasyVM: FantasyViewModel
+    @State private var showPayoutHistory = false
     
     var body: some View {
         NavigationStack {
@@ -17,11 +18,26 @@ struct MyGarageView: View {
                 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 20) {
-                        Text("My Garage")
-                            .font(.largeTitle.bold())
-                            .foregroundColor(.white)
-                            .padding(.horizontal)
-                            .padding(.top)
+                        HStack {
+                            Text("My Garage")
+                                .font(.largeTitle.bold())
+                                .foregroundColor(.white)
+                            
+                            Spacer()
+                            
+                            Button(action: {
+                                showPayoutHistory = true
+                            }) {
+                                Image(systemName: "list.clipboard")
+                                    .font(.title2)
+                                    .foregroundColor(.gray)
+                                    .padding(8)
+                                    .background(Color.white.opacity(0.1))
+                                    .clipShape(Circle())
+                            }
+                        }
+                        .padding(.horizontal)
+                        .padding(.top)
                         
                         // Stats Overview
                         HStack(spacing: 16) {
@@ -59,21 +75,31 @@ struct MyGarageView: View {
                             .padding(.top, 10)
                         
                         // Inventory List
-                        VStack(spacing: 12) {
+                        let columns = [
+                            GridItem(.flexible()),
+                            GridItem(.flexible())
+                        ]
+                        
+                        LazyVGrid(columns: columns, spacing: 16) {
                             ForEach(fantasyVM.myGarage) { card in
-                                InventoryCardRow(card: card)
-                            }
-                            
-                            if fantasyVM.myGarage.isEmpty {
-                                Text("Your garage is empty. Head to the market!")
-                                    .foregroundColor(.gray)
-                                    .padding(.top, 40)
+                                GarageCardView(card: card)
                             }
                         }
                         .padding(.horizontal)
+                        
+                        if fantasyVM.myGarage.isEmpty {
+                            Text("Your garage is empty. Head to the market!")
+                                .foregroundColor(.gray)
+                                .padding(.top, 40)
+                                .frame(maxWidth: .infinity, alignment: .center)
+                        }
                     }
                 }
             }
+        }
+        .sheet(isPresented: $showPayoutHistory) {
+            PayoutHistoryView()
+                .environmentObject(fantasyVM)
         }
     }
 }
@@ -109,84 +135,103 @@ struct StatBox: View {
     }
 }
 
-struct InventoryCardRow: View {
+struct GarageCardView: View {
     let card: UserDriverCard
     
     var body: some View {
-        HStack(spacing: 16) {
-            // Tier Badge/Icon
+        VStack(spacing: 0) {
+            // Card Image Area
             ZStack {
-                Circle()
-                    .fill(Color(hex: card.tier.colorHex).opacity(0.12))
-                    .frame(width: 48, height: 48)
+                LinearGradient(
+                    colors: [Color(hex: card.tier.colorHex).opacity(0.1), Color.white.opacity(0.02)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
                 
-                Image(systemName: "person.fill")
-                    .foregroundColor(Color(hex: card.tier.colorHex))
-                    .font(.system(size: 18, weight: .bold))
+                if let urlString = card.template.cutoutUrl ?? card.template.imageUrl, let url = URL(string: urlString) {
+                    CachedAsyncImage(url: url) { image in
+                        image
+                            .resizable()
+                            .scaledToFit()
+                    } placeholder: {
+                        ProgressView()
+                    }
+                    .padding(8)
+                } else {
+                    Image(systemName: "person.crop.rectangle.fill")
+                        .resizable()
+                        .scaledToFit()
+                        .padding(20)
+                        .foregroundColor(Color(hex: card.tier.colorHex))
+                }
+                
+                // Tier Badge
+                VStack {
+                    HStack {
+                        Text(card.tier.rawValue.uppercased())
+                            .font(.system(size: 9, weight: .bold))
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 3)
+                            .background(Color(hex: card.tier.colorHex))
+                            .cornerRadius(4)
+                            .foregroundColor(.white)
+                        Spacer()
+                    }
+                    Spacer()
+                }
+                .padding(8)
             }
+            .frame(height: 140)
             
-            VStack(alignment: .leading, spacing: 4) {
+            // Card Info
+            VStack(alignment: .leading, spacing: 6) {
                 Text(card.template.driverName)
                     .font(.system(size: 16, weight: .bold))
                     .foregroundColor(.white)
+                    .lineLimit(1)
                 
-                HStack(spacing: 6) {
-                    Text(card.tier.rawValue)
-                        .font(.system(size: 9, weight: .bold))
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(Color(hex: card.tier.colorHex).opacity(0.2))
-                        .foregroundColor(Color(hex: card.tier.colorHex))
-                        .cornerRadius(4)
-                    
-                    Text(card.template.series)
-                        .font(.system(size: 9, weight: .bold))
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(Color.white.opacity(0.08))
-                        .foregroundColor(.gray)
-                        .cornerRadius(4)
-                }
-            }
-            
-            Spacer()
-            
-            // Yield Stats
-            VStack(alignment: .trailing, spacing: 4) {
-                Text("YIELD")
-                    .font(.system(size: 9, weight: .bold))
+                Text(card.template.team)
+                    .font(.system(size: 12))
                     .foregroundColor(.gray)
-                    .tracking(0.5)
+                    .lineLimit(1)
                 
-                HStack(spacing: 3) {
+                // Yield Display
+                HStack(spacing: 4) {
+                    Text("TOTAL YIELD:")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundColor(.gray)
+                    Spacer()
                     Image(systemName: "n.circle.fill")
-                        .font(.system(size: 11))
-                        .foregroundColor(.cyan)
-                    Text("+\(card.totalYieldNxt)")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(.green)
+                        .font(.system(size: 13, weight: .bold))
+                    Text("+\(card.totalYieldNxt.nxtFormatted)")
+                        .font(.system(size: 13, weight: .bold))
                 }
+                .foregroundColor(.green)
+                .padding(.vertical, 8)
+                .padding(.horizontal, 8)
+                .background(Color.green.opacity(0.15))
+                .cornerRadius(8)
+                .padding(.top, 4)
             }
+            .padding(12)
         }
-        .padding(14)
         .background(
             ZStack {
                 Color(.systemGray6).opacity(0.15)
                 
-                // Subtle tier color glow in bottom-right corner of row
                 GeometryReader { geo in
                     Circle()
-                        .fill(Color(hex: card.tier.colorHex).opacity(0.08))
+                        .fill(Color(hex: card.tier.colorHex).opacity(0.15))
                         .frame(width: 80, height: 80)
-                        .blur(radius: 20)
-                        .position(x: geo.size.width - 10, y: geo.size.height - 10)
+                        .blur(radius: 30)
+                        .position(x: geo.size.width - 20, y: geo.size.height - 20)
                 }
             }
         )
-        .cornerRadius(16)
+        .cornerRadius(20)
         .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(Color(hex: card.tier.colorHex).opacity(0.2), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 20)
+                .stroke(Color(hex: card.tier.colorHex).opacity(0.3), lineWidth: 1)
         )
     }
 }

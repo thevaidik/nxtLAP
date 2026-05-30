@@ -51,6 +51,7 @@
 		9E3CC63C4800F59BC148A0CB /* MyGarageView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MyGarageView.swift; sourceTree = "<group>"; };
 		A119675E2F562190001578E6 /* RaceWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = RaceWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		A121056D2E216566009A4D77 /* NxtLAP.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NxtLAP.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A125A2082FCA400800A89896 /* Subscriptions.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = Subscriptions.storekit; sourceTree = "<group>"; };
 		A127B71D2F5E063600B09A41 /* RaceWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RaceWidgetExtension.entitlements; sourceTree = "<group>"; };
 		A1CE0EA82E5AB1CB00E29A49 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		A1CE0EAA2E5AB1CB00E29A49 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
@@ -132,6 +133,7 @@
 		A12105642E216566009A4D77 = {
 			isa = PBXGroup;
 			children = (
+				A125A2082FCA400800A89896 /* Subscriptions.storekit */,
 				A127B71D2F5E063600B09A41 /* RaceWidgetExtension.entitlements */,
 				A121056F2E216566009A4D77 /* motorsports */,
 				A11967612F562190001578E6 /* RaceWidget */,

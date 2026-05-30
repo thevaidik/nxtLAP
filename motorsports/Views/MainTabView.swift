@@ -34,13 +34,7 @@ struct MainTabView: View {
                 }
                 .tag(Tab.standings)
 
-            Group {
-                if authVM.isAuthenticated {
-                    FantasyDashboardView()
-                } else {
-                    AuthenticationView()
-                }
-            }
+            FantasyDashboardView()
                 .tabItem {
                     Label("Market", systemImage: "building.columns.fill")
                 }

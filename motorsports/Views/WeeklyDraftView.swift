@@ -3,9 +3,12 @@ import SwiftUI
 struct WeeklyDraftView: View {
     @EnvironmentObject var fantasyViewModel: FantasyViewModel
     @EnvironmentObject var dataService: RacingDataService
+    @EnvironmentObject var authVM: AuthenticationViewModel
+    
     @State private var activeSlotIndex: Int? = nil
     @State private var showInsufficientFundsAlert = false
     @State private var showRulesSheet = false
+    @State private var showSignInAlert = false
     
     private var upcomingFantasyRaces: [Race] {
         let cal = Calendar.current
@@ -25,7 +28,7 @@ struct WeeklyDraftView: View {
         VStack(alignment: .leading, spacing: 16) {
             // Header
             HStack {
-                Text("🏆 Nxt Weekly Draft")
+                Text("🏆 Draft")
                     .font(.system(size: 20, weight: .bold))
                     .foregroundColor(.white)
                 
@@ -45,7 +48,7 @@ struct WeeklyDraftView: View {
                 HStack(spacing: 4) {
                     Image(systemName: "n.circle.fill")
                         .foregroundColor(.cyan)
-                    Text("\(fantasyViewModel.coins)")
+                    Text("\(fantasyViewModel.coins.nxtFormatted)")
                         .font(.system(size: 15, weight: .bold))
                         .foregroundColor(.white)
                 }
@@ -157,11 +160,13 @@ struct WeeklyDraftView: View {
                     ForEach(0..<3, id: \.self) { index in
                         DraftSlotView(driver: fantasyViewModel.weeklyDraftPicks[index])
                             .onTapGesture {
-                                if !fantasyViewModel.draftLocked {
+                                if !authVM.isAuthenticated {
+                                    showSignInAlert = true
+                                } else if !fantasyViewModel.draftLocked {
                                     activeSlotIndex = index
                                 }
                             }
-                            .opacity(fantasyViewModel.draftLocked ? 0.6 : 1.0)
+                            .opacity((fantasyViewModel.draftLocked || !authVM.isAuthenticated) ? 0.6 : 1.0)
                     }
                 }
                 .padding(.horizontal, 20)
@@ -169,6 +174,11 @@ struct WeeklyDraftView: View {
                 // Lock In / Edit Picks Button
                 if fantasyViewModel.weeklyDraftPicks.compactMap({ $0 }).count == 3 {
                     Button(action: {
+                        if !authVM.isAuthenticated {
+                            showSignInAlert = true
+                            return
+                        }
+                        
                         if fantasyViewModel.draftLocked {
                             if fantasyViewModel.coins >= 500 {
                                 fantasyViewModel.unlockDraft(fee: 500)
@@ -231,6 +241,11 @@ struct WeeklyDraftView: View {
         } message: {
             Text("You need 500 Nxt to edit a locked draft.")
         }
+        .alert("Sign In Required", isPresented: $showSignInAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text("You must be signed in to play the Nxt Weekly Draft and earn rewards.")
+        }
         .sheet(isPresented: $showRulesSheet) {
             FantasyRulesSheet()
         }
@@ -284,17 +299,27 @@ struct DraftSlotView: View {
                 }
             } else {
                 // Empty State
-                VStack {
-                    Image(systemName: "plus")
-                        .font(.system(size: 24, weight: .bold))
-                        .foregroundColor(.gray)
+                VStack(spacing: 8) {
+                    ZStack {
+                        Circle()
+                            .fill(Color.gray.opacity(0.1))
+                            .frame(width: 50, height: 50)
+                            
+                        Image(systemName: "person.fill")
+                            .font(.system(size: 22))
+                            .foregroundColor(.gray.opacity(0.6))
+                    }
+                    
+                    Text("Empty")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(.gray.opacity(0.8))
                 }
             }
         }
         .frame(height: 140)
         .overlay(
             RoundedRectangle(cornerRadius: 16)
-                .stroke(driver != nil ? Color.cyan.opacity(0.5) : Color.white.opacity(0.2), style: driver != nil ? StrokeStyle(lineWidth: 2) : StrokeStyle(lineWidth: 1, dash: [5]))
+                .stroke(driver != nil ? Color.cyan.opacity(0.5) : Color.white.opacity(0.15), style: driver != nil ? StrokeStyle(lineWidth: 2) : StrokeStyle(lineWidth: 1, dash: [5]))
         )
     }
 }

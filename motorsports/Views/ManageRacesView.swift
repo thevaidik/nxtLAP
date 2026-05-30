@@ -5,13 +5,15 @@
 
 import SwiftUI
 
-struct SettingsView: View {
+struct ManageRacesView: View {
+    @AppStorage("selectedSeriesIds") private var selectedSeriesIdsData: Data = Data()
+    @Environment(\.dismiss) var dismiss
     @EnvironmentObject var dataService: RacingDataService
     @EnvironmentObject var livestreamViewModel: LivestreamViewModel
     @EnvironmentObject var notificationManager: NotificationManager
-    @State private var selectedTab: SettingsTab = .series
+    @State private var selectedTab: ManageRacesTab = .series
 
-    enum SettingsTab: String, CaseIterable {
+    enum ManageRacesTab: String, CaseIterable {
         case series = "Series"
         case streams = "Livestreams"
     }
@@ -22,8 +24,8 @@ struct SettingsView: View {
                 headerActions
                 
                 // Segmented picker
-                Picker("Settings", selection: $selectedTab) {
-                    ForEach(SettingsTab.allCases, id: \.self) { tab in
+                Picker("Manage Races", selection: $selectedTab) {
+                    ForEach(ManageRacesTab.allCases, id: \.self) { tab in
                         Text(tab.rawValue).tag(tab)
                     }
                 }
@@ -38,7 +40,7 @@ struct SettingsView: View {
                 }
             }
             .background(Color.black.ignoresSafeArea())
-            .navigationTitle("Settings")
+            .navigationTitle("Manage Races")
             .navigationBarTitleDisplayMode(.inline)
             .task {
                 if livestreamViewModel.streams.isEmpty {
@@ -430,6 +432,6 @@ struct SeriesRow: View {
 }
 
 #Preview {
-    SettingsView()
+    ManageRacesView()
         .environmentObject(RacingDataService())
 }

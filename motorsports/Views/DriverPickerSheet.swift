@@ -85,85 +85,80 @@ struct DriverPickerSheet: View {
                         Spacer()
                     } else {
                         ScrollView {
-                            VStack(spacing: 24) {
+                            VStack(spacing: 32) {
                                 ForEach(groupedDrivers, id: \.0) { seriesName, drivers in
-                                    VStack(alignment: .leading, spacing: 12) {
+                                    VStack(alignment: .leading, spacing: 16) {
                                         Text("\(seriesName.uppercased()) DRIVERS")
                                             .font(.system(size: 14, weight: .heavy))
                                             .foregroundColor(.gray)
-                                            .padding(.horizontal, 8)
+                                            .padding(.horizontal, 20)
                                         
-                                        VStack(spacing: 12) {
-                                            ForEach(drivers) { driver in
-                                                Button(action: {
-                                                    fantasyViewModel.makeDraftPick(index: slotIndex, driver: driver)
-                                                    dismiss()
-                                                }) {
-                                                    HStack(spacing: 16) {
-                                                        // Mini Thumbnail
-                                                        ZStack {
-                                                            Circle()
-                                                                .fill(Color(.systemGray6))
-                                                                .frame(width: 48, height: 48)
-                                                                
-                                                            if let urlString = driver.cutoutUrl ?? driver.imageUrl, let url = URL(string: urlString) {
-                                                                CachedAsyncImage(url: url) { image in
-                                                                    image
-                                                                        .resizable()
-                                                                        .scaledToFit()
-                                                                        .padding(.top, 4)
-                                                                } placeholder: {
-                                                                    ProgressView().scaleEffect(0.7)
-                                                                }
-                                                            } else {
-                                                                Image(systemName: "person.fill")
-                                                                    .foregroundColor(.gray)
-                                                            }
-                                                        }
-                                                        .frame(width: 48, height: 48)
-                                                        .clipShape(Circle())
-                                                        .overlay(Circle().stroke(Color.white.opacity(0.1), lineWidth: 1))
-                                                        
-                                                        VStack(alignment: .leading, spacing: 4) {
-                                                            Text(driver.driverName)
-                                                                .font(.system(size: 16, weight: .bold))
-                                                                .foregroundColor(.white)
-                                                            
-                                                            HStack(spacing: 6) {
-                                                                Text(driver.team)
-                                                                    .font(.system(size: 12, weight: .medium))
-                                                                    .foregroundColor(.gray)
-                                                                
+                                        ScrollView(.horizontal, showsIndicators: false) {
+                                            HStack(spacing: 16) {
+                                                ForEach(drivers) { driver in
+                                                    Button(action: {
+                                                        fantasyViewModel.makeDraftPick(index: slotIndex, driver: driver)
+                                                        dismiss()
+                                                    }) {
+                                                        VStack(spacing: 12) {
+                                                            // Mini Thumbnail
+                                                            ZStack {
                                                                 Circle()
-                                                                    .fill(Color.gray)
-                                                                    .frame(width: 3, height: 3)
+                                                                    .fill(Color(.systemGray6))
+                                                                    .frame(width: 64, height: 64)
                                                                     
-                                                                Text("Est. \(driver.basePriceNxt) Nxt")
-                                                                    .font(.system(size: 11, weight: .bold))
-                                                                    .foregroundColor(.cyan)
+                                                                if let urlString = driver.cutoutUrl ?? driver.imageUrl, let url = URL(string: urlString) {
+                                                                    CachedAsyncImage(url: url) { image in
+                                                                        image
+                                                                            .resizable()
+                                                                            .scaledToFit()
+                                                                            .padding(.top, 4)
+                                                                    } placeholder: {
+                                                                        ProgressView().scaleEffect(0.8)
+                                                                    }
+                                                                } else {
+                                                                    Image(systemName: "person.fill")
+                                                                        .font(.system(size: 24))
+                                                                        .foregroundColor(.gray)
+                                                                }
+                                                            }
+                                                            .frame(width: 64, height: 64)
+                                                            .clipShape(Circle())
+                                                            .overlay(Circle().stroke(Color.white.opacity(0.1), lineWidth: 1))
+                                                            
+                                                            VStack(spacing: 4) {
+                                                                Text(driver.driverName)
+                                                                    .font(.system(size: 14, weight: .bold))
+                                                                    .foregroundColor(.white)
+                                                                    .lineLimit(1)
+                                                                
+                                                                Text(driver.team)
+                                                                    .font(.system(size: 11, weight: .medium))
+                                                                    .foregroundColor(.gray)
+                                                                    .lineLimit(1)
+                                                                    
+                                                                Text("DRAFT")
+                                                                    .font(.system(size: 10, weight: .black))
+                                                                    .foregroundColor(.black)
+                                                                    .padding(.horizontal, 16)
+                                                                    .padding(.vertical, 6)
+                                                                    .background(Color.cyan)
+                                                                    .cornerRadius(8)
+                                                                    .padding(.top, 4)
                                                             }
                                                         }
-                                                        
-                                                        Spacer()
-                                                        
-                                                        // Select Button
-                                                        Text("DRAFT")
-                                                            .font(.system(size: 12, weight: .bold))
-                                                            .foregroundColor(.black)
-                                                            .padding(.horizontal, 16)
-                                                            .padding(.vertical, 8)
-                                                            .background(Color.white)
-                                                            .cornerRadius(20)
+                                                        .frame(width: 120)
+                                                        .padding(12)
+                                                        .background(Color.white.opacity(0.05))
+                                                        .cornerRadius(16)
+                                                        .overlay(
+                                                            RoundedRectangle(cornerRadius: 16)
+                                                                .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                                                        )
                                                     }
-                                                    .padding()
-                                                    .background(Color(.systemGray6).opacity(0.15))
-                                                    .cornerRadius(16)
-                                                    .overlay(
-                                                        RoundedRectangle(cornerRadius: 16)
-                                                            .stroke(Color.white.opacity(0.05), lineWidth: 1)
-                                                    )
                                                 }
                                             }
+                                            .padding(.horizontal, 20)
                                         }
                                     }
                                 }

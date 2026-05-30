@@ -5,6 +5,9 @@ struct SidebarProfileView: View {
     @EnvironmentObject var userVM: UserViewModel
     @EnvironmentObject var fantasyVM: FantasyViewModel
     @EnvironmentObject var authVM: AuthenticationViewModel
+    @EnvironmentObject var storeManager: StoreManager
+    
+    @State private var showPaywall = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
@@ -18,9 +21,19 @@ struct SidebarProfileView: View {
                         .font(.system(size: 20, weight: .bold))
                         .foregroundColor(.white)
                     
-                    Text("NxtLAP Member")
-                        .font(.system(size: 14))
-                        .foregroundColor(.gray)
+                    HStack(spacing: 6) {
+                        if storeManager.isPro {
+                            Image(systemName: "checkmark.seal.fill")
+                                .foregroundColor(.yellow)
+                            Text("PRO MEMBER")
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundColor(.yellow)
+                        } else {
+                            Text("NxtLAP Member")
+                                .font(.system(size: 14))
+                                .foregroundColor(.gray)
+                        }
+                    }
                 }
                 
                 Spacer()
@@ -47,7 +60,7 @@ struct SidebarProfileView: View {
                         .font(.system(size: 16))
                         .foregroundColor(.white)
                     Spacer()
-                    Text("\(fantasyVM.coins)")
+                    Text("\(fantasyVM.coins.nxtFormatted)")
                         .font(.system(size: 16, weight: .bold))
                         .foregroundColor(.green)
                 }
@@ -55,6 +68,24 @@ struct SidebarProfileView: View {
             }
             
             Spacer()
+            
+            if !storeManager.isPro {
+                Button(action: {
+                    showPaywall = true
+                }) {
+                    HStack {
+                        Image(systemName: "crown.fill")
+                        Text("Get NxtLAP Pro")
+                    }
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(.black)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(LinearGradient(colors: [.yellow, .orange], startPoint: .topLeading, endPoint: .bottomTrailing))
+                    .cornerRadius(12)
+                }
+                .padding(.bottom, 12)
+            }
             
             Button(action: {
                 authVM.signOut()
@@ -74,5 +105,10 @@ struct SidebarProfileView: View {
         }
         .padding(.horizontal, 24)
         .background(Color(.systemGray6))
+        .sheet(isPresented: $showPaywall) {
+            if #available(iOS 17.0, *) {
+                PaywallView()
+            }
+        }
     }
 }

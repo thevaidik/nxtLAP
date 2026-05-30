@@ -28,6 +28,9 @@ class FantasyViewModel: ObservableObject {
     @Published var availableCards: [DriverCardTemplate] = FantasyMockData.driverTemplates
     @Published var myGarage: [UserDriverCard] = []
     
+    // History
+    @Published var payoutHistory: [PayoutHistory] = []
+    
     private let coinsKey = "nxtlap_fantasy_coins"
     private let picksKey = "nxtlap_fantasy_picks"
     private let garageKey = "nxtlap_fantasy_garage"
@@ -262,16 +265,45 @@ class FantasyViewModel: ObservableObject {
                             self.saveGarage()
                         }
                         
+                        if let historyJson = json["payoutHistory"] as? [[String: Any]] {
+                            var parsedHistory: [PayoutHistory] = []
+                            for h in historyJson {
+                                if let date = h["date"] as? String,
+                                   let draftYield = h["draftYield"] as? Int,
+                                   let garageYield = h["garageYield"] as? Int,
+                                   let totalYield = h["totalYield"] as? Int {
+                                    parsedHistory.append(PayoutHistory(date: date, draftYield: draftYield, garageYield: garageYield, totalYield: totalYield))
+                                }
+                            }
+                            self.payoutHistory = parsedHistory
+                        }
+                        
                         // Mark as successfully fetched so syncStateToCloud is now safe to run
                         self.hasSuccessfullyFetchedCloudState = true
                     }
                     print("☁️ Fetched Fantasy State from Cloud")
+                } else if httpRes.statusCode == 404 {
+                    print("☁️ No existing profile found in Cloud (New User)")
+                    await MainActor.run {
+                        self.hasSuccessfullyFetchedCloudState = true
+                    }
+                } else {
+                    print("❌ Failed to fetch Fantasy State from Cloud: \(httpRes.statusCode)")
+                    await MainActor.run {
+                        self.hasSuccessfullyFetchedCloudState = true // unblock UI even on error
+                    }
                 }
             } else {
                 print("❌ Failed to fetch Fantasy State from Cloud")
+                await MainActor.run {
+                    self.hasSuccessfullyFetchedCloudState = true // unblock UI even on error
+                }
             }
         } catch {
             print("❌ Network Error fetching state: \(error)")
+            await MainActor.run {
+                self.hasSuccessfullyFetchedCloudState = true // unblock UI even on error
+            }
         }
     }
     

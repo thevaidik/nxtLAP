@@ -144,6 +144,7 @@ struct RacingServerSeries: Codable {
     let short_name: String
     let category: String
     let description: String
+    let is_fantasy_eligible: Bool?
 }
 
 // MARK: - F1 Standings Models

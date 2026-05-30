@@ -25,6 +25,7 @@ struct motorsportsApp: App {
     @StateObject private var notificationManager = NotificationManager.shared
     @StateObject private var fantasyViewModel = FantasyViewModel()
     @StateObject private var userViewModel = UserViewModel()
+    @StateObject private var storeManager = StoreManager()
     
     init() {
         configureAmplify()
@@ -64,6 +65,7 @@ struct motorsportsApp: App {
                 .environmentObject(notificationManager)
                 .environmentObject(fantasyViewModel)
                 .environmentObject(userViewModel)
+                .environmentObject(storeManager)
                 .fontWidth(Font.Width(0.1))
                 .onChange(of: scenePhase) {
                     if scenePhase == .active {

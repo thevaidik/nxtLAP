@@ -7,6 +7,12 @@
 
 import Foundation
 
+extension Int {
+    var nxtFormatted: String {
+        self.formatted(.number.locale(Locale(identifier: "en_US")))
+    }
+}
+
 enum CardTier: String, CaseIterable, Codable {
     case common = "Common"
     case rare = "Rare"

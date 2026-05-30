@@ -10,6 +10,7 @@ import SwiftUI
 struct CardMarketView: View {
     @EnvironmentObject var fantasyVM: FantasyViewModel
     @EnvironmentObject var dataService: RacingDataService
+    @EnvironmentObject var authVM: AuthenticationViewModel
     
     // Dev Mode State
     @State private var showDevAlert = false
@@ -22,6 +23,7 @@ struct CardMarketView: View {
     
     // Rules Sheet State
     @State private var showRulesSheet = false
+    @State private var showSignInAlert = false
     
     // Columns for grid
     let columns = [
@@ -66,7 +68,7 @@ struct CardMarketView: View {
                             HStack(spacing: 4) {
                                 Image(systemName: "n.circle.fill")
                                     .foregroundColor(.cyan)
-                                Text("\(fantasyVM.coins)")
+                                Text("\(fantasyVM.coins.nxtFormatted)")
                                     .font(.system(size: 16, weight: .bold))
                                     .foregroundColor(.white)
                             }
@@ -89,7 +91,7 @@ struct CardMarketView: View {
                         .padding(.top)
                         
                         // Market Grid Grouped by Series
-                        if !fantasyVM.hasSuccessfullyFetchedCloudState {
+                        if authVM.isAuthenticated && !fantasyVM.hasSuccessfullyFetchedCloudState {
                             VStack(spacing: 20) {
                                 Spacer().frame(height: 100)
                                 ProgressView()
@@ -117,9 +119,14 @@ struct CardMarketView: View {
                                                         template: template,
                                                         isOwned: isOwned
                                                     ) {
+                                                        if !authVM.isAuthenticated {
+                                                            showSignInAlert = true
+                                                            return
+                                                        }
+                                                        
                                                         if fantasyVM.coins >= template.basePriceNxt {
                                                             fantasyVM.purchaseCard(template: template)
-                                                            HapticManager.shared.trigger(.medium) // Should be .heavy for success? Wait, I will use .light or medium
+                                                            HapticManager.shared.trigger(.medium) 
                                                             showPurchaseSuccess = true
                                                         } else {
                                                             HapticManager.shared.trigger(.heavy)
@@ -168,7 +175,7 @@ struct CardMarketView: View {
                 devBalanceInput = ""
             }
         } message: {
-            Text("Enter pass (1100) to set balance.")
+            Text("Enter password to set balance.")
         }
         .alert("Insufficient Nxt", isPresented: $showInsufficientAlert) {
             Button("OK", role: .cancel) { }
@@ -179,6 +186,11 @@ struct CardMarketView: View {
             Button("Awesome", role: .cancel) { }
         } message: {
             Text("This driver is now in your Garage! They will passively generate Nxt for you after every race.")
+        }
+        .alert("Sign In Required", isPresented: $showSignInAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text("You must be signed in to purchase drivers and earn Nxt.")
         }
         .sheet(isPresented: $showRulesSheet) {
             FantasyRulesSheet()
@@ -272,7 +284,7 @@ struct MarketCardView: View {
                         } else {
                             Image(systemName: "n.circle.fill")
                                 .font(.system(size: 13, weight: .bold))
-                            Text("\(template.basePriceNxt)")
+                            Text("\(template.basePriceNxt.nxtFormatted)")
                                 .font(.system(size: 13, weight: .bold))
                         }
                     }

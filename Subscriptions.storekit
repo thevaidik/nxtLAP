@@ -1,0 +1,53 @@
+{
+  "identifier" : "55E8D622",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+
+  ],
+  "settings" : {
+    "_failGracePeriodSet" : false,
+    "_timeRate" : 0
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "755CD2B5",
+      "localizations" : [
+
+      ],
+      "name" : "Pro Membership",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "1.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "056A1523",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Support development and get Pro features.",
+              "displayName" : "NxtLAP Pro",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.nxtlap.pro.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Monthly Pro",
+          "subscriptionGroupID" : "755CD2B5",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

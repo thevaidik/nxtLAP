@@ -11,7 +11,7 @@ class RacingAPIService: ObservableObject {
     private let session = URLSession.shared
     
     // Toggle this to true to use the test server
-    static let useTestServer = true
+    static let useTestServer = false
     
     static var baseURL: String {
         return useTestServer 

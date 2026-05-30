@@ -15,7 +15,7 @@ struct StandingsView: View {
     }
     
     @State private var weekSegment: CalendarWeekSegment = .thisWeek
-    @State private var showSettings = false
+    @State private var showManageRaces = false
     
     private func isInThisWeek(_ date: Date) -> Bool {
         Calendar.current.isDate(date, equalTo: Date(), toGranularity: .weekOfYear)
@@ -136,7 +136,7 @@ struct StandingsView: View {
                             .font(.system(size: 34, weight: .bold))
                             .foregroundColor(.white)
                         
-                        Button(action: { showSettings = true }) {
+                        Button(action: { showManageRaces = true }) {
                             HStack(spacing: 4) {
                                 Image(systemName: "slider.horizontal.3")
                                     .font(.system(size: 11, weight: .bold))
@@ -211,8 +211,8 @@ struct StandingsView: View {
             .background(Color.black.ignoresSafeArea())
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
-            .sheet(isPresented: $showSettings) {
-                SettingsView()
+            .sheet(isPresented: $showManageRaces) {
+                ManageRacesView()
             }
         }
         .preferredColorScheme(.dark)
