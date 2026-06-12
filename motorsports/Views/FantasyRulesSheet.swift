@@ -13,15 +13,15 @@ struct FantasyRulesSheet: View {
                         Text("Welcome to NxtLAP Fantasy")
                             .font(.title2)
                             .fontWeight(.bold)
-                        Text("Draft drivers every week and earn NXT based on their real-world performance.")
+                        Text("Draft drivers and earn NXT based on their real-world performance.")
                             .foregroundColor(.gray)
                     }
                     
                     // Rule 1
                     RuleBlockView(
                         icon: "flag.checkered",
-                        title: "1. The Weekly Draft",
-                        description: "Pick 3 drivers to form your weekly team. You can draft drivers from any supported series racing this week. Once a specific race starts, those drivers are locked and can no longer be drafted."
+                        title: "1. The Draft",
+                        description: "Pick 3 drivers to form your team. You can draft drivers from any of the next 2 supported series. Once a specific race starts, those drivers are locked and can no longer be drafted."
                     )
                     
                     // Rule 2

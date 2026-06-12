@@ -14,7 +14,7 @@ struct DownsamplingAsyncImage: View {
     let contentMode: ContentMode
     
     @State private var image: UIImage? = nil
-    @State private var isLoading = true
+    @State private var isLoading: Bool = true
     
     init(url: URL?, targetSize: CGSize, contentMode: ContentMode = .fill) {
         self.url = url

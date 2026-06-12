@@ -7,16 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		267A79773E8FE0777AD164E7 /* FantasyDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 497EB4240A7D3ACC2FFEF6D5 /* FantasyDashboardView.swift */; };
-		9F8884DD93CC7A7DC1B5409C /* CardMarketView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 069FCB60E9B23091EED1DA70 /* CardMarketView.swift */; };
-		A0A08F889A354E9B10E96E5D /* SidebarProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 571A0722770BDC28C9ACCE5F /* SidebarProfileView.swift */; };
 		A11752D32F991C72003FB3AC /* YouTubePlayerKit in Frameworks */ = {isa = PBXBuildFile; productRef = A11752D22F991C72003FB3AC /* YouTubePlayerKit */; };
 		A119675F2F562190001578E6 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A1CE0EA82E5AB1CB00E29A49 /* WidgetKit.framework */; };
 		A11967602F562190001578E6 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A1CE0EAA2E5AB1CB00E29A49 /* SwiftUI.framework */; };
 		A119676B2F562191001578E6 /* RaceWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A119675E2F562190001578E6 /* RaceWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		A1E18E4B2FC84D0700CDBFD1 /* AWSCognitoAuthPlugin in Frameworks */ = {isa = PBXBuildFile; productRef = A1E18E4A2FC84D0700CDBFD1 /* AWSCognitoAuthPlugin */; };
-		D106053172F6D6ECDD86DA95 /* FantasyCardModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4092186C751E6CA8F371524F /* FantasyCardModels.swift */; };
-		EC6037B5291AD87C7B403345 /* MyGarageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E3CC63C4800F59BC148A0CB /* MyGarageView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -302,11 +297,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D106053172F6D6ECDD86DA95 /* FantasyCardModels.swift in Sources */,
-				267A79773E8FE0777AD164E7 /* FantasyDashboardView.swift in Sources */,
-				9F8884DD93CC7A7DC1B5409C /* CardMarketView.swift in Sources */,
-				EC6037B5291AD87C7B403345 /* MyGarageView.swift in Sources */,
-				A0A08F889A354E9B10E96E5D /* SidebarProfileView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

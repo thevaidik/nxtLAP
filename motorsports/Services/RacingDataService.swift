@@ -16,8 +16,8 @@ class RacingDataService: ObservableObject {
     @Published var notificationsEnabledSeries: Set<String> = [] // Independent notification toggle
     @Published var upcomingRaces: [Race] = []
     @Published var pastRaces: [Race] = []
-    @Published var isLoadingData = false
-    @Published var isDevMode = false
+    @Published var isLoadingData: Bool = false
+    @Published var isDevMode: Bool = false
     @Published var apiConnectionStatus: String = "Not tested"
     
     private let apiService = RacingAPIService()

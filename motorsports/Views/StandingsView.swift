@@ -15,7 +15,7 @@ struct StandingsView: View {
     }
     
     @State private var weekSegment: CalendarWeekSegment = .thisWeek
-    @State private var showManageRaces = false
+    @State private var showManageRaces: Bool = false
     
     private func isInThisWeek(_ date: Date) -> Bool {
         Calendar.current.isDate(date, equalTo: Date(), toGranularity: .weekOfYear)
@@ -135,24 +135,21 @@ struct StandingsView: View {
                         Text("Calendar")
                             .font(.system(size: 34, weight: .bold))
                             .foregroundColor(.white)
+                        Spacer()
                         
                         Button(action: { showManageRaces = true }) {
                             HStack(spacing: 4) {
                                 Image(systemName: "slider.horizontal.3")
                                     .font(.system(size: 11, weight: .bold))
-                                Text("Manage Races")
+                                Text("Manage")
                                     .font(.system(size: 12, weight: .bold))
                             }
-                            .foregroundColor(.racingRed)
+                            .foregroundColor(.white)
                             .padding(.horizontal, 10)
                             .padding(.vertical, 5)
-                            .background(
-                                Capsule()
-                                    .fill(Color.racingRed.opacity(0.15))
-                            )
+                            .background(.ultraThinMaterial)
+                            .clipShape(Capsule())
                         }
-                        
-                        Spacer()
                     }
                     .padding(.horizontal, 20)
                     .padding(.top, 16)
@@ -752,7 +749,7 @@ struct ConstructorStandingRow: View {
 class StandingsViewModel: ObservableObject {
     @Published var drivers: [F1DriverStanding] = []
     @Published var constructors: [F1ConstructorStanding] = []
-    @Published var isLoading = false
+    @Published var isLoading: Bool = false
     @Published var errorMessage: String? = nil
 
     private let apiService = RacingAPIService()

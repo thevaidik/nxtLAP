@@ -12,7 +12,7 @@ struct YouTubeVideoPlayerView: View {
     let stream: Livestream
     @Environment(\.dismiss) private var dismiss
     @State private var youTubePlayer: YouTubePlayer?
-    @State private var isInitializing = true
+    @State private var isInitializing: Bool = true
     
     init(stream: Livestream) {
         self.stream = stream

@@ -14,7 +14,7 @@ struct FantasyDashboardView: View {
     }
     
     @State private var selectedTab: FantasyTab = .market
-    @State private var showAvailabilitySheet = false
+    @State private var showAvailabilitySheet: Bool = false
     @EnvironmentObject var authVM: AuthenticationViewModel
     
     var body: some View {

@@ -1,8 +1,8 @@
 import SwiftUI
 
 struct RacingLoadingView: View {
-    @State private var lightStates = [false, false, false, false, false]
-    @State private var goGreen = false
+    @State private var lightStates: [Bool] = [false, false, false, false, false]
+    @State private var goGreen: Bool = false
     
     var body: some View {
         VStack(spacing: 40) {

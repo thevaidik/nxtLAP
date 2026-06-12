@@ -19,6 +19,7 @@ struct WatchView: View {
     @EnvironmentObject var dataService: RacingDataService
     @State private var selectedTab: WatchTab = .watch
     @State private var selectedStream: Livestream?
+    @State private var showManageRaces: Bool = false
     
     var body: some View {
         NavigationStack {
@@ -41,14 +42,28 @@ struct WatchView: View {
                 // Sticky Header with NxtLAP Logo and Picker
                 VStack(spacing: 0) {
                     // Logo
-                    HStack {
-                        Text("NxtLAP")
-                            .font(.system(size: 32, weight: .bold))
+                    HStack(alignment: .center, spacing: 12) {
+                        Text("Watch")
+                            .font(.system(size: 34, weight: .bold))
                             .foregroundColor(dataService.isDevMode ? .green : .white)
                             .onTapGesture(count: 6) {
                                 dataService.toggleDevMode()
                             }
                         Spacer()
+                        
+                        Button(action: { showManageRaces = true }) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "slider.horizontal.3")
+                                    .font(.system(size: 11, weight: .bold))
+                                Text("Manage")
+                                    .font(.system(size: 12, weight: .bold))
+                            }
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(.ultraThinMaterial)
+                            .clipShape(Capsule())
+                        }
                     }
                     .padding(.horizontal, 20)
                     .padding(.top, 10)
@@ -59,11 +74,13 @@ struct WatchView: View {
                         .padding(.horizontal, 20)
                         .padding(.bottom, 15)
                 }
-                .background(.ultraThinMaterial)
-                .background(Color.black.opacity(0.4))
+                .background(Color.black)
             }
             .fullScreenCover(item: $selectedStream) { stream in
                 YouTubeVideoPlayerView(stream: stream)
+            }
+            .sheet(isPresented: $showManageRaces) {
+                ManageRacesView()
             }
             .task {
                 if viewModel.streams.isEmpty {

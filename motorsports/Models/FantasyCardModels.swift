@@ -59,9 +59,9 @@ struct UserDriverCard: Identifiable, Codable {
 // MARK: - Mock Data
 struct FantasyMockData {
     static let driverTemplates: [DriverCardTemplate] = [
-        DriverCardTemplate(id: "f1_verstappen", driverName: "Max Verstappen", series: "F1", team: "Red Bull Racing", basePriceNxt: 5000, imageUrl: nil, cutoutUrl: nil),
-        DriverCardTemplate(id: "f1_norris", driverName: "Lando Norris", series: "F1", team: "McLaren", basePriceNxt: 4500, imageUrl: nil, cutoutUrl: nil),
-        DriverCardTemplate(id: "f1_leclerc", driverName: "Charles Leclerc", series: "F1", team: "Ferrari", basePriceNxt: 4200, imageUrl: nil, cutoutUrl: nil),
+        DriverCardTemplate(id: "f1_verstappen", driverName: "Max Verstappen", series: "Formula1", team: "Red Bull Racing", basePriceNxt: 5000, imageUrl: nil, cutoutUrl: nil),
+        DriverCardTemplate(id: "f1_norris", driverName: "Lando Norris", series: "Formula1", team: "McLaren", basePriceNxt: 4500, imageUrl: nil, cutoutUrl: nil),
+        DriverCardTemplate(id: "f1_leclerc", driverName: "Charles Leclerc", series: "Formula1", team: "Ferrari", basePriceNxt: 4200, imageUrl: nil, cutoutUrl: nil),
         DriverCardTemplate(id: "imsa_derani", driverName: "Pipo Derani", series: "IMSA", team: "Action Express", basePriceNxt: 2000, imageUrl: nil, cutoutUrl: nil),
         DriverCardTemplate(id: "indy_palou", driverName: "Alex Palou", series: "IndyCar", team: "Chip Ganassi", basePriceNxt: 3500, imageUrl: nil, cutoutUrl: nil)
     ]

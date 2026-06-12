@@ -3,7 +3,7 @@ import SwiftUI
 struct FantasyAvailabilityView: View {
     @State private var eligibleSeries: [RacingServerSeries] = []
     @State private var upcomingSeries: [RacingServerSeries] = []
-    @State private var isLoading = true
+    @State private var isLoading: Bool = true
     @Environment(\.dismiss) var dismiss
 
     var body: some View {

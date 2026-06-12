@@ -13,8 +13,8 @@ struct HomeView: View {
     @EnvironmentObject var authVM: AuthenticationViewModel
     @EnvironmentObject var userVM: UserViewModel
     
-    @State private var isSidebarShowing = false
-    @State private var isShowingAuthSheet = false
+    @State private var isSidebarShowing: Bool = false
+    @State private var isShowingAuthSheet: Bool = false
     
     var body: some View {
         NavigationStack {
@@ -73,8 +73,8 @@ struct HomeView: View {
                                 .padding(.top, 8)
                                 .padding(.bottom, 16)
                             
-                            // Fantasy Predictor
-                            WeeklyDraftView()
+                            // Upcoming Races List
+                            UpcomingRacesCarouselView()
                                 .padding(.top, 8)
                                 .padding(.bottom, 32)
                         }

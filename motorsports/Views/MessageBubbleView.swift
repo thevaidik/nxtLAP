@@ -9,8 +9,8 @@ struct MessageBubbleView: View {
     let isLast: Bool
     let hasThread: Bool
 
-    @State private var showPicker = false
-    @State private var showReplies = false
+    @State private var showPicker: Bool = false
+    @State private var showReplies: Bool = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {

@@ -9,8 +9,8 @@ import SwiftUI
 
 struct DailyBonusClaimView: View {
     @EnvironmentObject var fantasyVM: FantasyViewModel
-    @State private var animateGlow = false
-    @State private var animateIcon = false
+    @State private var animateGlow: Bool = false
+    @State private var animateIcon: Bool = false
     
     var body: some View {
         ZStack {

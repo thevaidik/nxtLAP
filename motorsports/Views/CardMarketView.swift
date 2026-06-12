@@ -13,17 +13,17 @@ struct CardMarketView: View {
     @EnvironmentObject var authVM: AuthenticationViewModel
     
     // Dev Mode State
-    @State private var showDevAlert = false
+    @State private var showDevAlert: Bool = false
     @State private var devPasswordInput = ""
     @State private var devBalanceInput = ""
     
     // Purchase Feedback State
-    @State private var showPurchaseSuccess = false
-    @State private var showInsufficientAlert = false
+    @State private var showPurchaseSuccess: Bool = false
+    @State private var showInsufficientAlert: Bool = false
     
     // Rules Sheet State
-    @State private var showRulesSheet = false
-    @State private var showSignInAlert = false
+    @State private var showRulesSheet: Bool = false
+    @State private var showSignInAlert: Bool = false
     
     // Columns for grid
     let columns = [
@@ -40,15 +40,10 @@ struct CardMarketView: View {
                     VStack(spacing: 20) {
                         // Header / Wallet
                         HStack {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Card Market")
-                                    .font(.system(size: 28, weight: .bold))
-                                    .foregroundColor(.white)
-                                    .lineLimit(1)
-                                Text("Invest in drivers to earn Nxt")
-                                    .font(.subheadline)
-                                    .foregroundColor(.gray)
-                            }
+                            Text("Draft")
+                                .font(.system(size: 22, weight: .bold))
+                                .foregroundColor(.white)
+                            
                             Spacer()
                             
                             // Rules Button
@@ -89,6 +84,14 @@ struct CardMarketView: View {
                         }
                         .padding(.horizontal)
                         .padding(.top)
+                        
+                        // The Draft
+                        WeeklyDraftView()
+                            .padding(.bottom, 16)
+                            
+                        Divider()
+                            .background(Color.white.opacity(0.1))
+                            .padding(.horizontal)
                         
                         // Market Grid Grouped by Series
                         if authVM.isAuthenticated && !fantasyVM.hasSuccessfullyFetchedCloudState {

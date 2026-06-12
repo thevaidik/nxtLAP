@@ -37,7 +37,7 @@ class StoreManager: ObservableObject {
     /// Checks the user's current entitlements (active subscriptions/purchases)
     func updateEntitlements() async {
         var activeIDs = Set<String>()
-        var hasPro = false
+        var hasPro: Bool = false
         
         for await result in Transaction.currentEntitlements {
             do {

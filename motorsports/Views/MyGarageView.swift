@@ -9,7 +9,7 @@ import SwiftUI
 
 struct MyGarageView: View {
     @EnvironmentObject var fantasyVM: FantasyViewModel
-    @State private var showPayoutHistory = false
+    @State private var showPayoutHistory: Bool = false
     
     var body: some View {
         NavigationStack {
@@ -51,7 +51,7 @@ struct MyGarageView: View {
                         // Active Draft Picks
                         if fantasyVM.draftLocked {
                             VStack(alignment: .leading, spacing: 10) {
-                                Text("Active Weekly Draft")
+                                Text("Active Draft")
                                     .font(.title3.bold())
                                     .foregroundColor(.white)
                                     .padding(.horizontal)

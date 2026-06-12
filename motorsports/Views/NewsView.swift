@@ -9,7 +9,7 @@ import SwiftUI
 
 struct NewsView: View {
     @EnvironmentObject var viewModel: NewsViewModel
-    @State private var currentIndex = 0
+    @State private var currentIndex: Int = 0
     
     var body: some View {
         ZStack {

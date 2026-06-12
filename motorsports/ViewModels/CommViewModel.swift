@@ -5,13 +5,13 @@ import SwiftUI
 @MainActor
 class CommViewModel: ObservableObject {
     @Published var messages: [CommMessage] = []
-    @Published var isLoading = false
+    @Published var isLoading: Bool = false
     @Published var errorMessage: String?
 
     @Published var localReactions: [String: [String: ReactionData]] = [:]
 
     @Published var replies: [String: [CommReply]] = [:]
-    @Published var isFetchingReplies = false
+    @Published var isFetchingReplies: Bool = false
 
     @Published var channels: [CommChannel] = []
 

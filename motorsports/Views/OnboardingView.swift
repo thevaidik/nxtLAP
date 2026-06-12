@@ -2,7 +2,7 @@ import SwiftUI
 
 struct OnboardingView: View {
     @EnvironmentObject var dataService: RacingDataService
-    @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
+    @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding: Bool = false
     
     @State private var localSelectedSeries: Set<String> = []
     

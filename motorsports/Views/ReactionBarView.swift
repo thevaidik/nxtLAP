@@ -7,7 +7,7 @@ let allowedEmojis = ["🏁", "🏆", "🔥", "❤️", "👍", "😮"]
 struct ReactionBarView: View {
     let message: CommMessage
     @ObservedObject var viewModel: CommViewModel
-    @State private var showPicker = false
+    @State private var showPicker: Bool = false
 
     var body: some View {
         HStack(spacing: 6) {

@@ -11,7 +11,7 @@ class RacingAPIService: ObservableObject {
     private let session = URLSession.shared
     
     // Toggle this to true to use the test server
-    static let useTestServer = false
+    static let useTestServer: Bool = false
     
     static var baseURL: String {
         return useTestServer 
@@ -26,7 +26,9 @@ class RacingAPIService: ObservableObject {
         let url = URL(string: "\(RacingAPIService.baseURL)/series")!
         print("🔗 Fetching all series from: \(url)")
         
-        let (data, response) = try await session.data(from: url)
+        var request = URLRequest(url: url)
+        request.cachePolicy = .reloadIgnoringLocalCacheData
+        let (data, response) = try await session.data(for: request)
         
         if let httpResponse = response as? HTTPURLResponse {
             print("📡 Response: \(httpResponse.statusCode)")
@@ -50,7 +52,9 @@ class RacingAPIService: ObservableObject {
         let url = URL(string: "\(RacingAPIService.baseURL)/races")!
         print("🔗 Fetching all races from: \(url)")
         
-        let (data, response) = try await session.data(from: url)
+        var request = URLRequest(url: url)
+        request.cachePolicy = .reloadIgnoringLocalCacheData
+        let (data, response) = try await session.data(for: request)
         
         if let httpResponse = response as? HTTPURLResponse {
             print("📡 Response: \(httpResponse.statusCode)")
@@ -96,7 +100,9 @@ class RacingAPIService: ObservableObject {
         let url = URL(string: "\(RacingAPIService.baseURL)/races/upcoming")!
         print("🔗 Fetching upcoming races from: \(url)")
         
-        let (data, response) = try await session.data(from: url)
+        var request = URLRequest(url: url)
+        request.cachePolicy = .reloadIgnoringLocalCacheData
+        let (data, response) = try await session.data(for: request)
         
         if let httpResponse = response as? HTTPURLResponse {
             print("📡 Response: \(httpResponse.statusCode)")
@@ -119,7 +125,9 @@ class RacingAPIService: ObservableObject {
         let url = URL(string: "\(RacingAPIService.baseURL)/races/\(seriesSlug)")!
         print("🔗 Fetching \(seriesSlug) races from: \(url)")
         
-        let (data, response) = try await session.data(from: url)
+        var request = URLRequest(url: url)
+        request.cachePolicy = .reloadIgnoringLocalCacheData
+        let (data, response) = try await session.data(for: request)
         
         if let httpResponse = response as? HTTPURLResponse {
             print("📡 \(seriesSlug) Response: \(httpResponse.statusCode)")
@@ -142,7 +150,9 @@ class RacingAPIService: ObservableObject {
         let url = URL(string: "\(RacingAPIService.baseURL)/f1/standings")!
         print("🔗 Fetching F1 standings from: \(url)")
         
-        let (data, response) = try await session.data(from: url)
+        var request = URLRequest(url: url)
+        request.cachePolicy = .reloadIgnoringLocalCacheData
+        let (data, response) = try await session.data(for: request)
         
         if let httpResponse = response as? HTTPURLResponse {
             print("📡 F1 Standings Response: \(httpResponse.statusCode)")
@@ -164,7 +174,9 @@ class RacingAPIService: ObservableObject {
     /// Check API health
     func checkHealth() async throws -> Bool {
         let url = URL(string: "\(RacingAPIService.baseURL)/health")!
-        let (data, response) = try await session.data(from: url)
+        var request = URLRequest(url: url)
+        request.cachePolicy = .reloadIgnoringLocalCacheData
+        let (data, response) = try await session.data(for: request)
         
         if let httpResponse = response as? HTTPURLResponse {
             if httpResponse.statusCode != 200 {

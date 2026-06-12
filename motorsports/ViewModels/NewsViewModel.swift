@@ -11,7 +11,7 @@ import Combine
 @MainActor
 class NewsViewModel: ObservableObject {
     @Published var articles: [NewsArticle] = []
-    @Published var isLoading = false
+    @Published var isLoading: Bool = false
     @Published var errorMessage: String?
     
     private let newsService = NewsService()

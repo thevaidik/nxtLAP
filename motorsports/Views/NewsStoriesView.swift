@@ -11,6 +11,12 @@ struct NewsStoriesView: View {
     @ObservedObject var newsViewModel: NewsViewModel
     @State private var selectedStoryGroup: StoryGroup? = nil
     
+    @AppStorage("viewedArticleIds") private var viewedArticleIdsString: String = ""
+    private var viewedArticleIds: Set<String> {
+        get { Set(viewedArticleIdsString.components(separatedBy: ",").filter { !$0.isEmpty }) }
+        nonmutating set { viewedArticleIdsString = newValue.joined(separator: ",") }
+    }
+    
     // Group articles by source
     private var articlesBySource: [(source: String, articles: [NewsArticle])] {
         let grouped = Dictionary(grouping: newsViewModel.articles) { $0.source }
@@ -37,25 +43,63 @@ struct NewsStoriesView: View {
                             StoryCircle(
                                 source: group.source,
                                 articles: group.articles,
+                                isViewed: group.articles.allSatisfy { viewedArticleIds.contains($0.id) },
                                 onTap: {
                                     selectedStoryGroup = StoryGroup(source: group.source, articles: group.articles)
+                                    var current = viewedArticleIds
+                                    group.articles.forEach { current.insert($0.id) }
+                                    viewedArticleIds = current
                                 }
                             )
                         }
                     }
                     .padding(.horizontal, 20)
+                    .padding(.vertical, 8)
                 }
             }
         }
-        .sheet(item: $selectedStoryGroup) { group in
-            StoryViewerView(
-                source: group.source,
-                articles: group.articles,
-                isPresented: Binding(
-                    get: { selectedStoryGroup != nil },
-                    set: { if !$0 { selectedStoryGroup = nil } }
+        .sheet(isPresented: Binding(
+            get: { selectedStoryGroup != nil },
+            set: { if !$0 { selectedStoryGroup = nil } }
+        )) {
+            if let group = selectedStoryGroup {
+                StoryViewerView(
+                    source: group.source,
+                    articles: group.articles,
+                    isPresented: Binding(
+                        get: { selectedStoryGroup != nil },
+                        set: { if !$0 { selectedStoryGroup = nil } }
+                    ),
+                    onFinish: {
+                        if let currentIndex = articlesBySource.firstIndex(where: { $0.source == group.source }),
+                           currentIndex + 1 < articlesBySource.count {
+                            let nextGroup = articlesBySource[currentIndex + 1]
+                            selectedStoryGroup = StoryGroup(source: nextGroup.source, articles: nextGroup.articles)
+                            
+                            var current = viewedArticleIds
+                            nextGroup.articles.forEach { current.insert($0.id) }
+                            viewedArticleIds = current
+                        } else {
+                            selectedStoryGroup = nil
+                        }
+                    }
                 )
-            )
+                .id(group.source)
+            }
+        }
+        .onAppear {
+            cleanupOldViewedArticles()
+        }
+        .onChange(of: newsViewModel.articles) { _ in
+            cleanupOldViewedArticles()
+        }
+    }
+    
+    private func cleanupOldViewedArticles() {
+        let currentArticleIds = Set(newsViewModel.articles.map { $0.id })
+        let validViewedIds = viewedArticleIds.intersection(currentArticleIds)
+        if validViewedIds.count != viewedArticleIds.count {
+            viewedArticleIdsString = validViewedIds.joined(separator: ",")
         }
     }
 }
@@ -71,6 +115,7 @@ struct StoryGroup: Identifiable {
 struct StoryCircle: View {
     let source: String
     let articles: [NewsArticle]
+    let isViewed: Bool
     let onTap: () -> Void
     
     private var displayName: String {
@@ -102,11 +147,11 @@ struct StoryCircle: View {
         VStack(spacing: 6) {
             Button(action: onTap) {
                 ZStack {
-                    // Gradient ring (unread story style) - always red
+                    // Gradient ring
                     Circle()
                         .stroke(
                             LinearGradient(
-                                gradient: Gradient(colors: [Color("RacingRed"), Color("RacingRed").opacity(0.6)]),
+                                gradient: Gradient(colors: isViewed ? [Color.white, Color.gray.opacity(0.5)] : [Color("RacingRed"), Color("RacingRed").opacity(0.6)]),
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             ),
@@ -185,8 +230,9 @@ struct StoryViewerView: View {
     let source: String
     let articles: [NewsArticle]
     @Binding var isPresented: Bool
+    var onFinish: (() -> Void)? = nil
     
-    @State private var currentIndex = 0
+    @State private var currentIndex: Int = 0
     @State private var progress: CGFloat = 0
     
     private let storyDuration: TimeInterval = 5.0
@@ -212,7 +258,57 @@ struct StoryViewerView: View {
             ZStack {
                 Color.black.edgesIgnoringSafeArea(.all)
                 
-                // Content
+                // Fullscreen Background Image (Blurred) + Fitted Foreground
+                if let imageUrl = currentArticle.imageUrl, let url = URL(string: imageUrl) {
+                    ZStack {
+                        // Blurred background
+                        AsyncImage(url: url) { phase in
+                            switch phase {
+                            case .success(let image):
+                                image
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .blur(radius: 40)
+                                    .scaleEffect(1.2) // Prevent edges from leaking blur
+                            default:
+                                Color(white: 0.1)
+                            }
+                        }
+                        .frame(width: geometry.size.width, height: geometry.size.height)
+                        .clipped()
+                        
+                        // Clear fitted foreground
+                        AsyncImage(url: url) { phase in
+                            switch phase {
+                            case .success(let image):
+                                image
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                            default:
+                                EmptyView()
+                            }
+                        }
+                        .frame(width: geometry.size.width)
+                    }
+                    .edgesIgnoringSafeArea(.all)
+                } else {
+                    LinearGradient(
+                        gradient: Gradient(colors: [Color(white: 0.15), Color.black]),
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .edgesIgnoringSafeArea(.all)
+                }
+                
+                // Merging Gradient Overlay for Readability
+                LinearGradient(
+                    colors: [.black.opacity(0.5), .clear, .black.opacity(0.5), .black.opacity(0.95)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .edgesIgnoringSafeArea(.all)
+                
+                // Content Overlay
                 VStack(spacing: 0) {
                     // Progress bars
                     HStack(spacing: 4) {
@@ -260,7 +356,7 @@ struct StoryViewerView: View {
                             
                             Text(currentArticle.formattedDate)
                                 .font(.caption2)
-                                .foregroundColor(.gray)
+                                .foregroundColor(.white.opacity(0.8))
                         }
                         
                         Spacer()
@@ -276,77 +372,54 @@ struct StoryViewerView: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
                     
-                    // Article content
-                    ScrollView {
-                        VStack(spacing: 0) {
-                            // Image
-                            if let imageUrl = currentArticle.imageUrl, let url = URL(string: imageUrl) {
-                                AsyncImage(url: url) { phase in
-                                    switch phase {
-                                    case .empty:
-                                        Rectangle()
-                                            .fill(Color.gray.opacity(0.2))
-                                            .overlay(ProgressView().tint(Color("RacingRed")))
-                                    case .success(let image):
-                                        image
-                                            .resizable()
-                                            .aspectRatio(contentMode: .fill)
-                                    case .failure:
-                                        Rectangle()
-                                            .fill(Color.gray.opacity(0.1))
-                                            .overlay(
-                                                Image(systemName: "photo")
-                                                    .font(.system(size: 40))
-                                                    .foregroundColor(.gray)
-                                            )
-                                    @unknown default:
-                                        EmptyView()
-                                    }
-                                }
-                                .frame(height: 250)
-                                .clipped()
-                            } else {
-                                LinearGradient(
-                                    gradient: Gradient(colors: [Color.gray.opacity(0.3), Color.gray.opacity(0.1)]),
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                                .frame(height: 200)
+                    Spacer()
+                    
+                    // Text content at the bottom
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(currentArticle.title)
+                            .font(.title3)
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                            .shadow(color: .black.opacity(0.5), radius: 2, x: 0, y: 1)
+                        
+                        Text(currentArticle.summary)
+                            .font(.subheadline)
+                            .foregroundColor(.white.opacity(0.9))
+                            .shadow(color: .black.opacity(0.5), radius: 1, x: 0, y: 1)
+                        
+                        HStack {
+                            // Indicator for more content
+                            HStack(spacing: 4) {
+                                Image(systemName: "chevron.compact.up")
+                                    .font(.caption2)
+                                Text("Tap left/right or swipe down")
+                                    .font(.caption2)
                             }
+                            .foregroundColor(.white.opacity(0.6))
                             
-                            // Text content
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text(currentArticle.title)
-                                    .font(.title3)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.white)
-                                    .lineLimit(3)
-                                
-                                Text(currentArticle.summary)
-                                    .font(.body)
-                                    .foregroundColor(.white.opacity(0.85))
-                                    .lineLimit(10)
-                                
-                                Link(destination: URL(string: currentArticle.articleUrl)!) {
-                                    HStack {
-                                        Spacer()
-                                        Text("Read Full Article")
-                                            .fontWeight(.semibold)
-                                        Image(systemName: "arrow.up.right")
-                                        Spacer()
-                                    }
-                                    .font(.subheadline)
-                                    .foregroundColor(.white)
-                                    .padding(.vertical, 12)
-                                    .background(Color("RacingRed"))
-                                    .cornerRadius(10)
+                            Spacer()
+                            
+                            // Liquid glass Read button
+                            Link(destination: URL(string: currentArticle.articleUrl)!) {
+                                HStack(spacing: 4) {
+                                    Text("Read")
+                                        .fontWeight(.semibold)
+                                    Image(systemName: "arrow.up.right")
+                                        .font(.system(size: 10, weight: .bold))
                                 }
-                                .padding(.top, 8)
+                                .font(.footnote)
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(.ultraThinMaterial)
+                                .cornerRadius(20)
+                                .environment(\.colorScheme, .dark)
                             }
-                            .padding(16)
-                            .padding(.bottom, 30)
                         }
+                        .padding(.top, 8)
                     }
+                    .padding(20)
+                    .padding(.bottom, 20)
                 }
                 .contentShape(Rectangle())
                 .onTapGesture { location in
@@ -395,7 +468,11 @@ struct StoryViewerView: View {
         if currentIndex < articles.count - 1 {
             currentIndex += 1
         } else {
-            isPresented = false
+            if let onFinish = onFinish {
+                onFinish()
+            } else {
+                isPresented = false
+            }
         }
     }
     

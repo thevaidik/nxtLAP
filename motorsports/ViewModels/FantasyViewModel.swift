@@ -11,7 +11,7 @@ import AWSPluginsCore
 
 @MainActor
 class FantasyViewModel: ObservableObject {
-    @Published var coins: Int = 1000
+    @Published var coins: Int = 0
     @Published var userPicks: [String: String] = [:] // Race ID -> Driver Name
     @Published var weeklyDraftPicks: [DriverCardTemplate?] = [nil, nil, nil]
     @Published var draftLocked: Bool = false

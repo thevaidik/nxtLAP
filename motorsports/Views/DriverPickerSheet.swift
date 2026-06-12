@@ -20,8 +20,10 @@ struct DriverPickerSheet: View {
             drivers = []
         } else {
             drivers = fantasyViewModel.availableCards.filter { driver in
-                futureRaces.contains { race in
-                    driver.series.caseInsensitiveCompare(race.series) == .orderedSame
+                let normalizedDriverSeries = driver.series.uppercased() == "F1" ? "FORMULA1" : driver.series.uppercased()
+                return futureRaces.contains { race in
+                    let normalizedRaceSeries = race.series.uppercased() == "F1" ? "FORMULA1" : race.series.uppercased()
+                    return normalizedDriverSeries == normalizedRaceSeries
                 }
             }
         }
@@ -45,7 +47,7 @@ struct DriverPickerSheet: View {
                     // Header
                     VStack(spacing: 8) {
                         if !upcomingRaces.isEmpty {
-                            Text("Weekly Draft")
+                            Text("Draft")
                                 .font(.headline)
                                 .foregroundColor(.white)
                         } else {

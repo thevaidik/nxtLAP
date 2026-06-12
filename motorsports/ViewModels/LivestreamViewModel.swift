@@ -12,7 +12,7 @@ import Combine
 class LivestreamViewModel: ObservableObject {
     @Published var streams: [Livestream] = []
     @Published var channels: [ChannelMetadata] = []
-    @Published var isLoading = false
+    @Published var isLoading: Bool = false
     @Published var errorMessage: String?
     @Published var excludedChannelNames: Set<String> = []
     

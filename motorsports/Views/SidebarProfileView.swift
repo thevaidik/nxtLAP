@@ -7,7 +7,7 @@ struct SidebarProfileView: View {
     @EnvironmentObject var authVM: AuthenticationViewModel
     @EnvironmentObject var storeManager: StoreManager
     
-    @State private var showPaywall = false
+    @State private var showPaywall: Bool = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
